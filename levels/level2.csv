@@ -1,0 +1,12 @@
+type,x,y,width,height
+platform,100,260,120,20
+platform,270,330,160,20
+platform,480,270,140,20
+platform,690,360,180,20
+platform,920,310,130,20
+platform,1100,390,170,20
+platform,1300,280,150,20
+platform,1500,350,200,20
+platform,1750,300,140,20
+platform,1920,380,160,20
+levelexit,1970,400,64,64
