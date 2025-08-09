@@ -1,3 +1,3 @@
 # Phantom-Ronin
 
-It's a half vibe-coded project.
+It's a more than half vibe-coded project.
