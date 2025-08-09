@@ -40,7 +40,7 @@ camera_y = 0.0
 CAMERA_SPEED_FACTOR = 0.5
 
 # Viewport dimensions
-WORLD_WIDTH = 2000
+WORLD_WIDTH = 4000
 WORLD_HEIGHT = 800
 
 # Level tracking

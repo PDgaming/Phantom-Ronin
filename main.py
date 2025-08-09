@@ -106,11 +106,24 @@ class Player:
         self.on_ground = False
         player_bbox_x, player_bbox_y, player_bbox_width, player_bbox_height = self.get_bbox() # Re-get bbox with updated X
 
-        for obj in game_objects:
+        for obj in list(game_objects):
             obj_bbox_x, obj_bbox_y, obj_bbox_width, obj_bbox_height = obj.get_bbox()
             # Check collision using player's current X and new Y
             if check_aabb_collision(player_bbox_x, player_bbox_y, player_bbox_width, player_bbox_height,
                                     obj_bbox_x, obj_bbox_y, obj_bbox_width, obj_bbox_height):
+                
+                # If we collide with a LevelExit, handle the transition.
+                if isinstance(obj, LevelExit):
+                    # Only trigger level transition if player is not falling down onto the flag from above
+                    # Check if player is moving up (jumping) or moving horizontally, not falling down
+                    if self.vy >= 0:  # Player is moving up or not moving vertically
+                        transition_to_next_level()
+                        # The `transition_to_next_level` function already clears game_objects
+                        # and resets the player position, so we should exit here.
+                        return
+                    # If player is falling down (vy < 0), ignore the collision and let them fall through
+                    continue
+                
                 # We've already handled `LevelExit` above, so this must be a platform.
                 # Collision detected on Y-axis, resolve by nudging player out
                 if self.vy > 0: # Moving up, hit bottom side of platform (ceiling)
@@ -292,25 +305,39 @@ def draw_background():
     glEnable(GL_BLEND)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
+    # Calculate how many background repetitions we need
+    background_width = 800  # Assuming background texture width is 800
+    repetitions_needed = int((camera_x + window_width) / background_width) + 1
+    start_repetition = int(camera_x / background_width)
+    
     glBegin(GL_QUADS)
-
-    s_start = camera_x / WORLD_WIDTH
-    s_end = (camera_x + window_width) / WORLD_WIDTH
-
-    t_start = 1.0
-    t_end = 0.0
-
-    glTexCoord2f(s_start, t_end)
-    glVertex2f(0.0, window_height)
-
-    glTexCoord2f(s_end, t_end)
-    glVertex2f(window_width, window_height)
-
-    glTexCoord2f(s_end, t_start)
-    glVertex2f(window_width, 0.0)
-
-    glTexCoord2f(s_start, t_start)
-    glVertex2f(0.0, 0.0)
+    
+    for i in range(start_repetition, start_repetition + repetitions_needed + 1):
+        bg_start_x = i * background_width
+        bg_end_x = (i + 1) * background_width
+        
+        # Calculate screen coordinates for this repetition
+        screen_start_x = max(0, bg_start_x - camera_x)
+        screen_end_x = min(window_width, bg_end_x - camera_x)
+        
+        if screen_end_x <= screen_start_x:
+            continue
+            
+        # Calculate texture coordinates
+        tex_start = (screen_start_x + camera_x - bg_start_x) / background_width
+        tex_end = (screen_end_x + camera_x - bg_start_x) / background_width
+        
+        glTexCoord2f(tex_start, 0.0)
+        glVertex2f(screen_start_x, window_height)
+        
+        glTexCoord2f(tex_end, 0.0)
+        glVertex2f(screen_end_x, window_height)
+        
+        glTexCoord2f(tex_end, 1.0)
+        glVertex2f(screen_end_x, 0.0)
+        
+        glTexCoord2f(tex_start, 1.0)
+        glVertex2f(screen_start_x, 0.0)
 
     glEnd()
 
@@ -431,7 +458,7 @@ if __name__ == "__main__":
         print("Failed to load texture. Exiting...")
         exit()
 
-    background_image_path = "assets/background.jpg"
+    background_image_path = "assets/background.png"
     background_texture_id = load_texture(background_image_path)
     if background_texture_id is None:
         print("Failed to load texture. Exiting...")
@@ -452,7 +479,7 @@ if __name__ == "__main__":
     player = Player(
         x=100, y=190, width=128, height=128, speed=400,
         texture_opengl_id=player_texture_id,
-        bbox_offset_x=30, bbox_offset_y=0, bbox_width=64, bbox_height=128
+        bbox_offset_x=30, bbox_offset_y=8, bbox_width=64, bbox_height=114
     )
 
     load_level_from_csv("levels/level1.csv")
