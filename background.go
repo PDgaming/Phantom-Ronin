@@ -8,13 +8,14 @@ type Background struct {
 	Position rl.Vector3
 	Height float32
 	Width float32
-	texture rl.Texture2D
+	Length float32
+	Color rl.Color
 }
 
 func (b *Background) draw() {
-	rl.DrawCube(b.Position, b.Width, b.Height, b.Height, rl.Blue)
+	rl.DrawCube(b.Position, b.Width, b.Height, b.Length, b.Color)
 }
 
-func (b *Background) Unload() {
-	rl.UnloadTexture(b.texture)
-}
+// func (b *Background) Unload() {
+// 	rl.UnloadTexture(b.texture)
+// }
