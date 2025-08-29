@@ -11,5 +11,7 @@ type Ground struct {
 }
 
 func (g *Ground) draw() {
-	rl.DrawCube(g.Position, g.Width, g.Height, g.Length, rl.Red)
+	g.Position.X = 0 + (g.Width / 2) - 0.25
+
+	rl.DrawCube(g.Position, g.Width, g.Height, g.Length, g.Color)
 }

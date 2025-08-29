@@ -1,6 +1,10 @@
 package main
 
-import rl "github.com/gen2brain/raylib-go/raylib"
+import (
+	"fmt"
+
+	rl "github.com/gen2brain/raylib-go/raylib"
+)
 
 const (
 	JUMP_STRENGTH_1 = 4.0
@@ -29,7 +33,7 @@ func (p *Player) draw() {
 	rl.DrawCube(p.Position, p.Width, p.Height, p.Length, p.Color)
 }
 
-func (p *Player) update(isSideView bool) {
+func (p *Player) update(isSideView bool, b *Background, g *Ground) {
 	p.Velocity.X = 0.0
 	p.Velocity.Z = 0.0
 
@@ -70,15 +74,17 @@ func (p *Player) update(isSideView bool) {
 	p.Position.Y += p.Velocity.Y * rl.GetFrameTime()
 	p.Position.Z += p.Velocity.Z * rl.GetFrameTime()
 
-	worldMinX := -worldWidth / 2
-	worldMaxX := worldWidth / 2
+	worldMaxX := b.Width - p.Width/2
 
-	worldMinZ := 1.0 - worldLength/2
-	worldMaxZ := 1.0 + worldLength/2
+	// Clamp player Z so it stays above the ground only
+	minZ := g.Position.Z - g.Length/2 + p.Length/2
+	maxZ := g.Position.Z + g.Length/2 - p.Length/2
 
-	clampedX := rl.Clamp(p.Position.X, worldMinX+p.Width/2, worldMaxX-p.Width/2)
-	clampedZ := rl.Clamp(p.Position.Z, worldMinZ+p.Length/2, worldMaxZ-p.Length/2)
+	clampedX := rl.Clamp(p.Position.X, 0, worldMaxX-p.Width/2)
+	clampedZ := rl.Clamp(p.Position.Z, minZ, maxZ)
 
 	p.Position.X = clampedX
 	p.Position.Z = clampedZ
+
+	fmt.Printf("Player Position: %v\n", p.Position)
 }

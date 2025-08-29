@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
@@ -8,14 +10,13 @@ const (
 	screenWidth  = int32(800)
 	screenHeight = int32(480)
 
-	worldWidth  = float32(20.0)
-	worldLength = float32(2.0)
+	worldWidth  = float32(5)
+	worldLength = float32(2)
 
 	GRAVITY = -9.8
 
-	cameraOffsetZ = float32(6.0)
-	cameraOffsetY = float32(0.0)
 	cameraOffsetX = float32(6.0)
+	cameraOffsetZ = float32(6.0)
 )
 
 func main() {
@@ -35,23 +36,23 @@ func main() {
 
 	// backgroundTexture := loadBackground()
 	background := Background{
-		Position: rl.NewVector3(0.0, 0.0, 0.0),
-		Height:   8.1,
+		Position: rl.NewVector3(0.0, 0.0, -1.0),
+		Height:   float32(screenHeight),
 		Width:    worldWidth,
-		Length:   0.2,
+		Length:   0.1,
 		Color:    rl.Blue,
 	}
 
 	ground := Ground{
-		Position: rl.NewVector3(0.0, -2.0, 1.0),
-		Height:   0.5,
+		Position: rl.NewVector3(0.0, -1.5, 0.1),
+		Height:   0.2,
 		Width:    worldWidth,
 		Length:   2.0,
 		Color:    rl.Red,
 	}
 
 	player := Player{
-		Position: rl.NewVector3(0.0, 0.0, 1.0),
+		Position: rl.NewVector3(0.0, 0.0, 0.0),
 		Width:    0.5,
 		Height:   1.0,
 		Length:   0.5,
@@ -64,7 +65,7 @@ func main() {
 			isSideView = !isSideView
 		}
 
-		player.update(isSideView)
+		player.update(isSideView, &background, &ground)
 
 		playerBox := GetBoundingBox(player.Position, player.Width, player.Height, player.Length)
 		groundBox := GetBoundingBox(ground.Position, ground.Width, ground.Height, ground.Length)
@@ -85,36 +86,28 @@ func main() {
 		}
 
 		if isSideView {
-			// Camera position is along the Z axis (original view)
-			worldBoundaryMinX := ground.Position.X - ground.Width/2
-			worldBoundaryMaxX := ground.Position.X + ground.Width/2
-			worldBoundaryMinY := ground.Position.Y + cameraOffsetY
-			worldBoundaryMaxY := background.Position.Y + background.Height/2
+			clampY := rl.Clamp(camera.Position.Y, 0, background.Height-player.Height)
 
-			clampedCameraX := rl.Clamp(player.Position.X, worldBoundaryMinX, worldBoundaryMaxX)
-			clampedCameraY := rl.Clamp(player.Position.Y+cameraOffsetY, worldBoundaryMinY, worldBoundaryMaxY)
+			// Camera position is along the Z axis (original view), no limits
+			camera.Position = rl.NewVector3(player.Position.X, clampY, player.Position.Z+cameraOffsetZ)
+			camera.Target = rl.NewVector3(player.Position.X, clampY, player.Position.Z)
 
-			camera.Position = rl.NewVector3(clampedCameraX, clampedCameraY-0.2, player.Position.Z+cameraOffsetZ)
-			camera.Target = rl.NewVector3(clampedCameraX, clampedCameraY, player.Position.Z)
-
+			fmt.Printf("Camera Position: %v\n", camera.Position)
 		} else {
-			// Camera position is along the X axis (rotated view)
-			worldBoundaryMinZ := ground.Position.Z - ground.Length/2
-			worldBoundaryMaxZ := ground.Position.Z + ground.Length/2
-			worldBoundaryMinY := ground.Position.Y + cameraOffsetY
-			worldBoundaryMaxY := background.Position.Y + background.Height/2
-
-			clampedCameraZ := rl.Clamp(player.Position.Z, worldBoundaryMinZ, worldBoundaryMaxZ)
-			clampedCameraY := rl.Clamp(player.Position.Y+cameraOffsetY, worldBoundaryMinY, worldBoundaryMaxY)
-
-			camera.Position = rl.NewVector3(player.Position.X+cameraOffsetX, clampedCameraY, clampedCameraZ)
-			camera.Target = rl.NewVector3(player.Position.X, clampedCameraY, clampedCameraZ)
-
+			clampY := rl.Clamp(camera.Position.Y, 0, background.Height-player.Height)
+			clampZ := rl.Clamp(player.Position.Z, 0, ground.Width-player.Width/2)
+			// Camera position is along the X axis (rotated view), no limits
+			camera.Position = rl.NewVector3(player.Position.X+cameraOffsetX, clampY, clampZ)
+			camera.Target = rl.NewVector3(player.Position.X, clampY, clampZ)
+			fmt.Printf("Camera Position: %v\n", camera.Position)
 		}
 
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.NewColor(255, 182, 193, 255))
+
 		rl.BeginMode3D(camera)
+		rl.DrawBoundingBox(playerBox, rl.Red)
+		rl.DrawBoundingBox(groundBox, rl.Green)
 
 		background.draw()
 		ground.draw()
