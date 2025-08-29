@@ -1,14 +1,12 @@
 package main
 
 import (
-	"fmt"
-
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 const (
-	JUMP_STRENGTH_1 = 4.0
-	JUMP_STRENGTH_2 = 5.0
+	JUMP_STRENGTH_1 = 5.0
+	JUMP_STRENGTH_2 = 6.0
 	SPEED           = 10.0
 )
 
@@ -86,5 +84,5 @@ func (p *Player) update(isSideView bool, b *Background, g *Ground) {
 	p.Position.X = clampedX
 	p.Position.Z = clampedZ
 
-	fmt.Printf("Player Position: %v\n", p.Position)
+	// fmt.Printf("Player Position: %v\n", p.Position)
 }
