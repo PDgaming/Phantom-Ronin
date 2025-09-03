@@ -5,9 +5,9 @@ import (
 )
 
 const (
-	JUMP_STRENGTH_1 = 5.0
-	JUMP_STRENGTH_2 = 6.0
-	SPEED           = 10.0
+	JUMP_STRENGTH = 5.0
+
+	SPEED           = 8.0
 )
 
 type Player struct {
@@ -53,11 +53,11 @@ func (p *Player) update(isSideView bool, b *Background, g *Ground) {
 
 	if rl.IsKeyPressed(rl.KeySpace) {
 		if p.IsGrounded {
-			p.Velocity.Y = JUMP_STRENGTH_1
+			p.Velocity.Y = JUMP_STRENGTH
 			p.jumpsUsed = 1
 			p.IsGrounded = false
 		} else if p.jumpsUsed == 1 {
-			p.Velocity.Y = JUMP_STRENGTH_2
+			p.Velocity.Y = JUMP_STRENGTH
 			p.jumpsUsed = 2
 		}
 	}
@@ -72,17 +72,11 @@ func (p *Player) update(isSideView bool, b *Background, g *Ground) {
 	p.Position.Y += p.Velocity.Y * rl.GetFrameTime()
 	p.Position.Z += p.Velocity.Z * rl.GetFrameTime()
 
-	worldMaxX := b.Width - p.Width/2
-
 	// Clamp player Z so it stays above the ground only
 	minZ := g.Position.Z - g.Length/2 + p.Length/2
 	maxZ := g.Position.Z + g.Length/2 - p.Length/2
 
-	clampedX := rl.Clamp(p.Position.X, 0, worldMaxX-p.Width/2)
 	clampedZ := rl.Clamp(p.Position.Z, minZ, maxZ)
 
-	p.Position.X = clampedX
 	p.Position.Z = clampedZ
-
-	// fmt.Printf("Player Position: %v\n", p.Position)
 }

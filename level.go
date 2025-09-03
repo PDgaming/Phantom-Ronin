@@ -57,6 +57,10 @@ func (l *Level) loadLevel(filePath string) {
 		if err != nil {
 			continue
 		}
+		final, err := strconv.ParseBool(row[6])
+		if err != nil {
+			continue
+		}
 
 		newPlatform := Platform{
 			Position: rl.NewVector3(float32(posX), float32(posY), float32(posZ)),
@@ -64,8 +68,14 @@ func (l *Level) loadLevel(filePath string) {
 			Height:   float32(height),
 			Length:   float32(length),
 			Color:    rl.Brown,
+
+			final:    final,
 		}
 
 		l.Platforms = append(l.Platforms, newPlatform)
 	}
+}
+
+func (l *Level) resetLevel() {
+	l.Platforms = []Platform{}
 }
