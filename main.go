@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	gui "github.com/gen2brain/raylib-go/raygui"
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
@@ -16,10 +17,18 @@ const (
 	GRAVITY = -9.8
 )
 
+var (
+	currentLevel Level
+	exitButton bool
+	startButton bool
+	transitionButton bool
+)
+
 type GameState struct {
 	Level      int
 	isSideView bool
 	isDebug    bool
+	menuState  string
 }
 
 func main() {
@@ -30,7 +39,8 @@ func main() {
 	state := GameState{
 		Level:      1,
 		isSideView: true,
-		isDebug:    true,
+		isDebug:    false,
+		menuState:  "startMenu",
 	}
 
 	// Camera
@@ -85,17 +95,17 @@ func main() {
 		Color:    rl.DarkBrown,
 	}
 
-	var currentLevel Level
-
 	resetGame(&state, &player, &currentLevel)
 
 	rl.SetTargetFPS(120)
 	for !rl.WindowShouldClose() {
-		if rl.IsKeyPressed(rl.KeyR) {
-			state.isSideView = !state.isSideView
-		}
+		if state.menuState == "inGame" || state.menuState == "gameOver" {
+			if rl.IsKeyPressed(rl.KeyR) {
+				state.isSideView = !state.isSideView
+			}
 
-		player.update(state.isSideView, &background, &ground)
+			player.update(state.isSideView, &background, &ground)
+		}
 
 		playerBox := GetBoundingBox(player.Position, player.Width, player.Height, player.Length)
 		groundBox := GetBoundingBox(ground.Position, ground.Width, ground.Height, ground.Length)
@@ -134,7 +144,7 @@ func main() {
 			camera.Position = rl.NewVector3(player.Position.X+5, player.Position.Y+2, 4)
 			camera.Target = rl.NewVector3(player.Position.X, player.Position.Y, 0)
 		}
-
+	
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.NewColor(255, 182, 193, 255))
 
@@ -176,9 +186,8 @@ func main() {
 					player.Velocity.Y = 0.0
 
 					if platform.final {
-						state.Level++
 						fmt.Printf("Transitioning to Level %d\n", state.Level)
-						resetGame(&state, &player, &currentLevel)
+						state.menuState = "levelTransition"
 					}
 				} else if (player.Position.Y+player.Height/2) <= platformBottom+0.05 && player.Velocity.Y > 0 {
 					// Hitting the platform from below while moving up
@@ -232,12 +241,42 @@ func main() {
 
 		rl.EndMode3D()
 
+		switch state.menuState {
+		case "startMenu":
+			rl.DrawText("Phanton Ronin", 80, 150, 80, rl.Red)
+			startButton = gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 250, 100, 40), "Start")
+			if startButton {
+				state.menuState = "inGame"
+				resetGame(&state, &player, &currentLevel)
+			}
+			exitButton = gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 300, 100, 40), "Exit")
+			if exitButton {
+				rl.CloseWindow()
+			}
+		case "levelTransition":
+			rl.DrawText("Level Completed!", 80, 150, 80, rl.Red)
+			transitionButton = gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 250, 100, 40), "Next")
+			if transitionButton {
+				state.menuState = "inGame"
+				state.Level++
+				resetGame(&state, &player, &currentLevel)
+			}
+		case "gameOver":
+			rl.DrawText("Game Completed!", 70, 190, 80, rl.Red)
+			exitButton = gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 280, 100, 40), "Exit")
+			if exitButton {
+				rl.CloseWindow()
+			}
+		}
+
 		if state.isDebug {
 			rl.DrawText(fmt.Sprintf("Player: %.2f, %.2f, %.2f", player.Position.X, player.Position.Y, player.Position.Z), 10, 40, 18, rl.Red)
 			rl.DrawText(fmt.Sprintf("Camera: %.2f, %.2f, %.2f", camera.Position.X, camera.Position.Y, camera.Position.Z), 10, 60, 18, rl.Red)
 			rl.DrawText(fmt.Sprintf("Level: %d", state.Level), 10, 80, 18, rl.Red)
 		}
 		
+		rl.DrawText(fmt.Sprintf("Level: %d", state.Level), 10, 30, 18, rl.Orange)
+
 		rl.DrawFPS(10, 10)
 		rl.EndDrawing()
 	}
@@ -262,9 +301,8 @@ func resetGame(state *GameState, player *Player, currentLevel *Level) {
     // case 3:
     //     currentLevel.loadLevel("./level-maps/level3.csv")
     default:
-        // Handle end of game, or loop back to the first level
-        fmt.Println("You have completed all levels! Restarting...")
-        state.Level = 1
-        currentLevel.loadLevel("./level-maps/level1.csv")
+        fmt.Println("Game Completed!")
+		state.Level = 0
+		state.menuState = "gameOver"
     }
 }
