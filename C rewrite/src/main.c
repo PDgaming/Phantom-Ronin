@@ -1,9 +1,10 @@
+#include <stdio.h>
+#include <string.h>
+
 #define RAYGUI_IMPLEMENTATION
 #include "../include/raygui.h"
 #include <raylib.h>
 #include <raymath.h>
-#include <stdio.h>
-#include <string.h>
 
 #include "common.h"
 
@@ -56,8 +57,11 @@ int main() {
   camera.fovy = 45.0f;
   camera.projection = CAMERA_PERSPECTIVE;
 
+  Texture2D backgroundTexture = LoadTexture("../assets/background.png");
+
   Background background = {
-      {0.0f, 0.0f, -1.0f}, screenHeight, WORLD_WIDTH, 0.1f, BLUE};
+      {0.0f, 0.0f, -1.0f}, screenHeight, WORLD_WIDTH, 0.1f, BLUE, true,
+      backgroundTexture};
 
   Ground ground = {{0.0f, -2.0f, 0.1f}, WORLD_WIDTH, 0.2f, 2.0f, RED};
 
@@ -296,7 +300,7 @@ int main() {
       DrawText(TextFormat("Level: %d", state.Level), 10, 80, 18, RED);
     }
 
-    DrawText(TextFormat("Level: %d", state.Level), 10, 80, 18, RED);
+    DrawText(TextFormat("Level: %d", state.Level), 10, 30, 18, RED);
 
     DrawFPS(10, 10);
     EndDrawing();

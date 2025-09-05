@@ -15,6 +15,9 @@ typedef struct {
     float Width;
     float Length;
     Color color;
+
+    bool TextureProvided;
+    Texture2D texture;
 } Background;
 
 typedef struct {
