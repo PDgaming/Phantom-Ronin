@@ -18,9 +18,9 @@ const (
 )
 
 var (
-	currentLevel Level
-	exitButton bool
-	startButton bool
+	currentLevel     Level
+	exitButton       bool
+	startButton      bool
 	transitionButton bool
 )
 
@@ -54,12 +54,12 @@ func main() {
 	backgroundTexture := rl.LoadTexture("./assets/background.png")
 
 	background := Background{
-		Position: rl.NewVector3(0.0, 0.0, -1.0),
-		Height:   float32(screenHeight),
-		Width:    worldWidth,
-		Length:   0.1,
-		Color:    rl.Blue,
-		Texture:  backgroundTexture,
+		Position:        rl.NewVector3(0.0, 0.0, -1.0),
+		Height:          float32(screenHeight),
+		Width:           worldWidth,
+		Length:          0.1,
+		Color:           rl.Blue,
+		Texture:         backgroundTexture,
 		TextureProvided: false,
 	}
 
@@ -140,11 +140,11 @@ func main() {
 
 			camera.Position = rl.NewVector3(clampX, clampY, 6)
 			camera.Target = rl.NewVector3(clampX, clampY, player.Position.Z)
-		} else {			
+		} else {
 			camera.Position = rl.NewVector3(player.Position.X+5, player.Position.Y+2, 4)
 			camera.Target = rl.NewVector3(player.Position.X, player.Position.Y, 0)
 		}
-	
+
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.NewColor(255, 182, 193, 255))
 
@@ -274,7 +274,7 @@ func main() {
 			rl.DrawText(fmt.Sprintf("Camera: %.2f, %.2f, %.2f", camera.Position.X, camera.Position.Y, camera.Position.Z), 10, 60, 18, rl.Red)
 			rl.DrawText(fmt.Sprintf("Level: %d", state.Level), 10, 80, 18, rl.Red)
 		}
-		
+
 		rl.DrawText(fmt.Sprintf("Level: %d", state.Level), 10, 30, 18, rl.Orange)
 
 		rl.DrawFPS(10, 10)
@@ -284,25 +284,25 @@ func main() {
 }
 
 func resetGame(state *GameState, player *Player, currentLevel *Level) {
-    // Reset player's position to the start of the new level
-    // This is a placeholder; you might want to read the starting position from the level file
-    player.Position = rl.NewVector3(0.0, -1.0, 0.0)
-    player.Velocity = rl.NewVector3(0.0, 0.0, 0.0)
-    player.IsGrounded = true
-    player.jumpsUsed = 0
-    currentLevel.resetLevel()
+	// Reset player's position to the start of the new level
+	// This is a placeholder; you might want to read the starting position from the level file
+	player.Position = rl.NewVector3(0.0, -1.0, 0.0)
+	player.Velocity = rl.NewVector3(0.0, 0.0, 0.0)
+	player.IsGrounded = true
+	player.jumpsUsed = 0
+	currentLevel.resetLevel()
 
-    // Load the new level
-    switch state.Level {
-    case 1:
-        currentLevel.loadLevel("./level-maps/level1.csv")
-    case 2:
-        currentLevel.loadLevel("./level-maps/level2.csv")
-    // case 3:
-    //     currentLevel.loadLevel("./level-maps/level3.csv")
-    default:
-        fmt.Println("Game Completed!")
+	// Load the new level
+	switch state.Level {
+	case 1:
+		currentLevel.loadLevel("./level-maps/level1.csv")
+	case 2:
+		currentLevel.loadLevel("./level-maps/level2.csv")
+	// case 3:
+	//     currentLevel.loadLevel("./level-maps/level3.csv")
+	default:
+		fmt.Println("Game Completed!")
 		state.Level = 0
 		state.menuState = "gameOver"
-    }
+	}
 }

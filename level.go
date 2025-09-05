@@ -69,7 +69,7 @@ func (l *Level) loadLevel(filePath string) {
 			Length:   float32(length),
 			Color:    rl.Brown,
 
-			final:    final,
+			final: final,
 		}
 
 		l.Platforms = append(l.Platforms, newPlatform)

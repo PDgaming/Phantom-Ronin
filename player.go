@@ -6,8 +6,7 @@ import (
 
 const (
 	JUMP_STRENGTH = 5.0
-
-	SPEED           = 8.0
+	SPEED         = 8.0
 )
 
 type Player struct {
@@ -72,7 +71,6 @@ func (p *Player) update(isSideView bool, b *Background, g *Ground) {
 	p.Position.Y += p.Velocity.Y * rl.GetFrameTime()
 	p.Position.Z += p.Velocity.Z * rl.GetFrameTime()
 
-	// Clamp player Z so it stays above the ground only
 	minZ := g.Position.Z - g.Length/2 + p.Length/2
 	maxZ := g.Position.Z + g.Length/2 - p.Length/2
 
