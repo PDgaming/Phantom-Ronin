@@ -54,13 +54,14 @@ func main() {
 	backgroundTexture := rl.LoadTexture("./assets/background.png")
 
 	background := Background{
-		Position:        rl.NewVector3(0.0, 0.0, -1.0),
-		Height:          float32(screenHeight),
-		Width:           worldWidth,
-		Length:          0.1,
-		Color:           rl.Blue,
+		Position: rl.NewVector3(0.0, 0.0, -1.0),
+		Height:   float32(screenHeight),
+		Width:    worldWidth,
+		Length:   0.1,
+		Color:    rl.Blue,
+
 		Texture:         backgroundTexture,
-		TextureProvided: false,
+		TextureProvided: true,
 	}
 
 	ground := Ground{
