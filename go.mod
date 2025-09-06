@@ -1,4 +1,4 @@
-module Phantom.Ronin
+module Phantom_Ronin
 
 go 1.25.0
 

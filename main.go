@@ -11,6 +11,7 @@ const (
 	screenWidth  = int32(800)
 	screenHeight = int32(480)
 
+	worldHeight = float32(15)
 	worldWidth  = float32(30)
 	worldLength = float32(2)
 
@@ -54,8 +55,8 @@ func main() {
 	backgroundTexture := rl.LoadTexture("./assets/background.png")
 
 	background := Background{
-		Position: rl.NewVector3(0.0, 0.0, -1.0),
-		Height:   float32(screenHeight),
+		Position: rl.NewVector3(0.0, 1.5, -1.0),
+		Height:   worldHeight,
 		Width:    worldWidth,
 		Length:   0.1,
 		Color:    rl.Blue,
@@ -64,13 +65,25 @@ func main() {
 		TextureProvided: true,
 	}
 
+	groundTexture := rl.LoadTexture("./assets/grass.jpg")
+
 	ground := Ground{
 		Position: rl.NewVector3(0.0, -2, 0.1),
 		Height:   0.2,
 		Width:    worldWidth,
 		Length:   2.0,
 		Color:    rl.Red,
+
+		TextureProvided: true,
+		Texture:         groundTexture,
 	}
+
+	playerTopTexture := rl.LoadTexture("./assets/topTexture.png")
+	playerLeftTexture := rl.LoadTexture("./assets/backTexture.png")
+	playerRightTexture := rl.LoadTexture("./assets/frontTexture.png")
+	playerFrontTexture := rl.LoadTexture("./assets/leftTexture.png")
+	playerBackTexture := rl.LoadTexture("./assets/rightTexture.png")
+	playerBottomTexture := rl.LoadTexture("./assets/bottomTexture.png")
 
 	player := Player{
 		Position: rl.NewVector3(0.0, -1.0, 0.0),
@@ -78,27 +91,41 @@ func main() {
 		Height:   1.0,
 		Length:   0.5,
 		Color:    rl.Green,
+
+		TextureProvided: true,
+		topTexture:      playerTopTexture,
+		leftTexture:     playerLeftTexture,
+		rightTexture:    playerRightTexture,
+		frontTexture:    playerFrontTexture,
+		backTexture:     playerBackTexture,
+		bottomTexture:   playerBottomTexture,
 	}
 
+	wallTexture := rl.LoadTexture("./assets/wall.jpg")
+
 	leftWall := Wall{
-		Position: rl.NewVector3(-0.5, -0.6, 0.0),
-		Width:    0.5,
-		Height:   3.0,
-		Length:   2.2,
-		Color:    rl.DarkBrown,
+		Position:        rl.NewVector3(-0.5, -0.6, 0.0),
+		Width:           0.5,
+		Height:          3.0,
+		Length:          2.2,
+		Color:           rl.DarkBrown,
+		TextureProvided: true,
+		Texture:         wallTexture,
 	}
 
 	rightWall := Wall{
-		Position: rl.NewVector3(worldWidth, -0.6, 0.0),
-		Width:    0.5,
-		Height:   3.0,
-		Length:   2.2,
-		Color:    rl.DarkBrown,
+		Position:        rl.NewVector3(worldWidth, -0.6, 0.0),
+		Width:           0.5,
+		Height:          3.0,
+		Length:          2.2,
+		Color:           rl.DarkBrown,
+		TextureProvided: true,
+		Texture:         wallTexture,
 	}
 
 	resetGame(&state, &player, &currentLevel)
 
-	rl.SetTargetFPS(120)
+	rl.SetTargetFPS(200)
 	for !rl.WindowShouldClose() {
 		if state.menuState == "inGame" || state.menuState == "gameOver" {
 			if rl.IsKeyPressed(rl.KeyR) {
@@ -147,7 +174,7 @@ func main() {
 		}
 
 		rl.BeginDrawing()
-		rl.ClearBackground(rl.NewColor(255, 182, 193, 255))
+		rl.ClearBackground(rl.NewColor(135, 206, 235, 255)) // Sky blue
 
 		rl.BeginMode3D(camera)
 
@@ -274,9 +301,9 @@ func main() {
 			rl.DrawText(fmt.Sprintf("Player: %.2f, %.2f, %.2f", player.Position.X, player.Position.Y, player.Position.Z), 10, 40, 18, rl.Red)
 			rl.DrawText(fmt.Sprintf("Camera: %.2f, %.2f, %.2f", camera.Position.X, camera.Position.Y, camera.Position.Z), 10, 60, 18, rl.Red)
 			rl.DrawText(fmt.Sprintf("Level: %d", state.Level), 10, 80, 18, rl.Red)
+		} else {
+			rl.DrawText(fmt.Sprintf("Level: %d", state.Level), 10, 30, 18, rl.Orange)
 		}
-
-		rl.DrawText(fmt.Sprintf("Level: %d", state.Level), 10, 30, 18, rl.Orange)
 
 		rl.DrawFPS(10, 10)
 		rl.EndDrawing()

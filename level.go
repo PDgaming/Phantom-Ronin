@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/csv"
-	"fmt"
 	"os"
 	"strconv"
 
@@ -16,7 +15,7 @@ type Level struct {
 func (l *Level) loadLevel(filePath string) {
 	f, err := os.Open(filePath)
 	if err != nil {
-		rl.TraceLog(rl.LogError, fmt.Sprintf("Failed to open level file: %s", err))
+		rl.TraceLog(rl.LogError, "Failed to open level file.")
 		panic(err)
 	}
 	defer f.Close()
@@ -24,7 +23,7 @@ func (l *Level) loadLevel(filePath string) {
 	reader := csv.NewReader(f)
 	records, err := reader.ReadAll()
 	if err != nil {
-		rl.TraceLog(rl.LogError, fmt.Sprintf("Failed to read CSV records: %s", err))
+		rl.TraceLog(rl.LogError, "Failed to read CSV records.")
 		panic(err)
 	}
 
@@ -62,12 +61,19 @@ func (l *Level) loadLevel(filePath string) {
 			continue
 		}
 
+		platformTopTexture := rl.LoadTexture("./assets/grass.jpg")
+		platformSideTexture := rl.LoadTexture("./assets/dirt.png")
+
 		newPlatform := Platform{
 			Position: rl.NewVector3(float32(posX), float32(posY), float32(posZ)),
 			Width:    float32(width),
 			Height:   float32(height),
 			Length:   float32(length),
 			Color:    rl.Brown,
+
+			TextureProvided: true,
+			TopTexture:      platformTopTexture,
+			SideTexture:     platformSideTexture,
 
 			final: final,
 		}

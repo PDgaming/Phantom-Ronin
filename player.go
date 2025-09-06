@@ -24,10 +24,22 @@ type Player struct {
 	IsGrounded bool
 	jumpsUsed  int
 	State      int
+
+	TextureProvided bool
+	topTexture      rl.Texture2D
+	leftTexture     rl.Texture2D
+	rightTexture    rl.Texture2D
+	frontTexture    rl.Texture2D
+	backTexture     rl.Texture2D
+	bottomTexture   rl.Texture2D
 }
 
 func (p *Player) draw() {
-	rl.DrawCube(p.Position, p.Width, p.Height, p.Length, p.Color)
+	if !p.TextureProvided {
+		rl.DrawCube(p.Position, p.Width, p.Height, p.Length, p.Color)
+	} else {
+		DrawCubeTextureRec_Player(p.topTexture, p.leftTexture, p.rightTexture, p.frontTexture, p.backTexture, p.bottomTexture, rl.Rectangle{X: 0, Y: 0, Width: float32(p.topTexture.Width), Height: float32(p.topTexture.Height)}, p.Position, p.Width, p.Height, p.Length, p.Color)
+	}
 }
 
 func (p *Player) update(isSideView bool, b *Background, g *Ground) {
