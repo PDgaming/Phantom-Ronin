@@ -46,11 +46,11 @@ func main() {
 
 	// Camera
 	camera := rl.Camera3D{}
-	camera.Position = rl.NewVector3(0, 0, 10.0)
+	camera.Position = rl.NewVector3(0, 0, 1)
 	camera.Target = rl.NewVector3(0.0, 0.0, 0.0)
 	camera.Up = rl.NewVector3(0.0, 1.0, 0.0)
-	camera.Fovy = 45.0
-	camera.Projection = rl.CameraPerspective
+	camera.Fovy = 10.0
+	camera.Projection = rl.CameraOrthographic
 
 	backgroundTexture := rl.LoadTexture("./assets/background.png")
 
@@ -104,20 +104,20 @@ func main() {
 	wallTexture := rl.LoadTexture("./assets/wall.jpg")
 
 	leftWall := Wall{
-		Position:        rl.NewVector3(-0.5, -0.6, 0.0),
-		Width:           0.5,
-		Height:          3.0,
-		Length:          2.2,
+		Position:        rl.NewVector3(-0.75, ground.Position.Y+2.5+ground.Height/2, 0.1),
+		Width:           1,
+		Height:          5,
+		Length:          2.0,
 		Color:           rl.DarkBrown,
 		TextureProvided: true,
 		Texture:         wallTexture,
 	}
 
 	rightWall := Wall{
-		Position:        rl.NewVector3(worldWidth, -0.6, 0.0),
-		Width:           0.5,
-		Height:          3.0,
-		Length:          2.2,
+		Position:        rl.NewVector3(worldWidth+0.25, ground.Position.Y+2.5+ground.Height/2, 0.1),
+		Width:           1,
+		Height:          5,
+		Length:          2.0,
 		Color:           rl.DarkBrown,
 		TextureProvided: true,
 		Texture:         wallTexture,
@@ -125,7 +125,7 @@ func main() {
 
 	resetGame(&state, &player, &currentLevel)
 
-	rl.SetTargetFPS(200)
+	rl.SetTargetFPS(60)
 	for !rl.WindowShouldClose() {
 		if state.menuState == "inGame" || state.menuState == "gameOver" {
 			if rl.IsKeyPressed(rl.KeyR) {
@@ -163,13 +163,19 @@ func main() {
 		}
 
 		if state.isSideView {
+			camera.Projection = rl.CameraOrthographic
+			camera.Fovy = 10
+
 			clampX := rl.Clamp(player.Position.X, 3.15, background.Width-3.7)
 			clampY := rl.Clamp(player.Position.Y, 0.1, background.Height-player.Height)
 
-			camera.Position = rl.NewVector3(clampX, clampY, 6)
+			camera.Position = rl.NewVector3(clampX, clampY, 1)
 			camera.Target = rl.NewVector3(clampX, clampY, player.Position.Z)
 		} else {
-			camera.Position = rl.NewVector3(player.Position.X+5, player.Position.Y+2, 4)
+			camera.Projection = rl.CameraPerspective
+			camera.Fovy = 45.0
+
+			camera.Position = rl.NewVector3(player.Position.X+5, player.Position.Y+2, 2)
 			camera.Target = rl.NewVector3(player.Position.X, player.Position.Y, 0)
 		}
 
@@ -188,7 +194,9 @@ func main() {
 		background.draw()
 		ground.draw()
 		leftWall.draw()
-		rightWall.draw()
+		if state.isSideView {
+			rightWall.draw()
+		}
 
 		for _, platform := range currentLevel.Platforms {
 			platform.draw()
@@ -308,6 +316,7 @@ func main() {
 		rl.DrawFPS(10, 10)
 		rl.EndDrawing()
 	}
+
 	defer rl.UnloadTexture(backgroundTexture)
 }
 
