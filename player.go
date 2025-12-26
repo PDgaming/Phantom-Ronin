@@ -6,7 +6,6 @@ import (
 
 const (
 	JUMP_STRENGTH = 5.0
-	SPEED         = 8.0
 )
 
 type Player struct {
@@ -20,6 +19,7 @@ type Player struct {
 	Velocity     rl.Vector3
 	Acceleration rl.Vector3
 	Mass         float32
+	SPEED        float32
 
 	IsGrounded bool
 	jumpsUsed  int
@@ -48,17 +48,17 @@ func (p *Player) update(isSideView bool, b *Background, g *Ground) {
 
 	if isSideView {
 		if rl.IsKeyDown(rl.KeyA) {
-			p.Velocity.X = -SPEED
+			p.Velocity.X = -p.SPEED
 		}
 		if rl.IsKeyDown(rl.KeyD) {
-			p.Velocity.X = SPEED
+			p.Velocity.X = p.SPEED
 		}
 	} else {
 		if rl.IsKeyDown(rl.KeyA) {
-			p.Velocity.Z = SPEED
+			p.Velocity.Z = p.SPEED
 		}
 		if rl.IsKeyDown(rl.KeyD) {
-			p.Velocity.Z = -SPEED
+			p.Velocity.Z = -p.SPEED
 		}
 	}
 

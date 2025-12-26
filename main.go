@@ -23,7 +23,22 @@ var (
 	exitButton       bool
 	startButton      bool
 	transitionButton bool
+	state            GameState
+	camera           rl.Camera3D
 )
+
+var introDialogues = []string{
+	"Kaito: My village didn't fall to swords or steel. It fell to\na whisper of black magic...",
+	"Kaito: The Mage sits in his high tower, weaving a spell\nthat anchors our world to the void.",
+	"Kaito: But the path to him is guarded by the Magical\nMountains...",
+	"Kaito: To most, this world is flat. A simple path of left\nand right.",
+	"Kaito: But I carry the Gaze of the Void. I can see the\nworld as it truly is.",
+	"Kaito: When a wall blocks my path, I do not turn back. I\nshift my reality.",
+	"Press [R] to Shift your Perspective. See the world from\na new angle.",
+	"Kaito: The Mage thinks he is safe. He forgot that a\nNinja strikes from the angle you least expect.",
+}
+
+var currentDialogueIdx = 7
 
 type GameState struct {
 	Level      int
@@ -32,30 +47,36 @@ type GameState struct {
 	menuState  string
 }
 
-func main() {
-	// Init
+func initialize() {
 	rl.InitWindow(screenWidth, screenHeight, "Phantom-Ronin")
-	defer rl.CloseWindow()
 
-	state := GameState{
+	state = GameState{
 		Level:      1,
 		isSideView: true,
-		isDebug:    false,
-		menuState:  "startMenu",
+		isDebug:    true,
+		menuState:  "intro",
 	}
+}
 
-	// Camera
-	camera := rl.Camera3D{}
-	camera.Position = rl.NewVector3(0, 0, 1)
-	camera.Target = rl.NewVector3(0.0, 0.0, 0.0)
-	camera.Up = rl.NewVector3(0.0, 1.0, 0.0)
-	camera.Fovy = 10.0
-	camera.Projection = rl.CameraOrthographic
+func initializeCamera() {
+	camera = rl.Camera3D{
+		Position:   rl.NewVector3(8.5, 0, 2),
+		Target:     rl.NewVector3(8.5, 0.0, 0.0),
+		Up:         rl.NewVector3(0.0, 1.0, 0.0),
+		Fovy:       10.0,
+		Projection: rl.CameraOrthographic,
+	}
+}
+
+func main() {
+	initialize()
+	defer rl.CloseWindow()
+	initializeCamera()
 
 	backgroundTexture := rl.LoadTexture("./assets/background.png")
 
 	background := Background{
-		Position: rl.NewVector3(0.0, 1.5, -1.0),
+		Position: rl.NewVector3(0, 0, -1.0),
 		Height:   worldHeight,
 		Width:    worldWidth,
 		Length:   0.1,
@@ -68,7 +89,7 @@ func main() {
 	groundTexture := rl.LoadTexture("./assets/grass.jpg")
 
 	ground := Ground{
-		Position: rl.NewVector3(0.0, -2, 0.1),
+		Position: rl.NewVector3(0.0, -3.5, 0.1),
 		Height:   0.2,
 		Width:    worldWidth,
 		Length:   2.0,
@@ -86,13 +107,15 @@ func main() {
 	playerBottomTexture := rl.LoadTexture("./assets/bottomTexture.png")
 
 	player := Player{
-		Position: rl.NewVector3(0.0, -1.0, 0.0),
+		Position: rl.NewVector3(25.0, -1, 0.0),
 		Width:    0.5,
 		Height:   1.0,
 		Length:   0.5,
 		Color:    rl.Green,
 
-		TextureProvided: true,
+		SPEED: 8.0,
+
+		TextureProvided: false,
 		topTexture:      playerTopTexture,
 		leftTexture:     playerLeftTexture,
 		rightTexture:    playerRightTexture,
@@ -104,20 +127,20 @@ func main() {
 	wallTexture := rl.LoadTexture("./assets/wall.jpg")
 
 	leftWall := Wall{
-		Position:        rl.NewVector3(-0.75, ground.Position.Y+2.5+ground.Height/2, 0.1),
+		Position:        rl.NewVector3(ground.Position.X, ground.Position.Y+2.5+ground.Height/2, 0.1),
 		Width:           1,
 		Height:          5,
-		Length:          2.0,
+		Length:          ground.Length,
 		Color:           rl.DarkBrown,
 		TextureProvided: true,
 		Texture:         wallTexture,
 	}
 
 	rightWall := Wall{
-		Position:        rl.NewVector3(worldWidth+0.25, ground.Position.Y+2.5+ground.Height/2, 0.1),
+		Position:        rl.NewVector3(ground.Width, ground.Position.Y+2.5+ground.Height/2, 0.1),
 		Width:           1,
 		Height:          5,
-		Length:          2.0,
+		Length:          ground.Length,
 		Color:           rl.DarkBrown,
 		TextureProvided: true,
 		Texture:         wallTexture,
@@ -125,14 +148,24 @@ func main() {
 
 	resetGame(&state, &player, &currentLevel)
 
-	rl.SetTargetFPS(60)
+	rl.SetTargetFPS(200)
 	for !rl.WindowShouldClose() {
-		if state.menuState == "inGame" || state.menuState == "gameOver" {
+		isInGameState := state.menuState == "inGame"
+		isGameOverState := state.menuState == "gameOver"
+		isIntroState := state.menuState == "intro"
+
+		if isInGameState || isGameOverState {
 			if rl.IsKeyPressed(rl.KeyR) {
 				state.isSideView = !state.isSideView
 			}
 
 			player.update(state.isSideView, &background, &ground)
+		}
+
+		if isIntroState {
+			if rl.IsKeyPressed(rl.KeyR) {
+				state.isSideView = !state.isSideView
+			}
 		}
 
 		playerBox := GetBoundingBox(player.Position, player.Width, player.Height, player.Length)
@@ -166,17 +199,21 @@ func main() {
 			camera.Projection = rl.CameraOrthographic
 			camera.Fovy = 10
 
-			clampX := rl.Clamp(player.Position.X, 3.15, background.Width-3.7)
+			clampX := rl.Clamp(player.Position.X, 8.5, background.Width-8.6)
 			clampY := rl.Clamp(player.Position.Y, 0.1, background.Height-player.Height)
 
-			camera.Position = rl.NewVector3(clampX, clampY, 1)
+			camera.Position = rl.NewVector3(clampX, clampY, 2)
 			camera.Target = rl.NewVector3(clampX, clampY, player.Position.Z)
+
+			player.SPEED = 8.0
 		} else {
 			camera.Projection = rl.CameraPerspective
 			camera.Fovy = 45.0
 
-			camera.Position = rl.NewVector3(player.Position.X+5, player.Position.Y+2, 2)
+			camera.Position = rl.NewVector3(player.Position.X+6, player.Position.Y+2, 4)
 			camera.Target = rl.NewVector3(player.Position.X, player.Position.Y, 0)
+
+			player.SPEED = 4.0
 		}
 
 		rl.BeginDrawing()
@@ -222,7 +259,9 @@ func main() {
 					player.Velocity.Y = 0.0
 
 					if platform.final {
-						fmt.Printf("Transitioning to Level %d\n", state.Level)
+						if state.isDebug {
+							fmt.Printf("Transitioning to Level %d\n", state.Level)
+						}
 						state.menuState = "levelTransition"
 					}
 				} else if (player.Position.Y+player.Height/2) <= platformBottom+0.05 && player.Velocity.Y > 0 {
@@ -278,6 +317,30 @@ func main() {
 		rl.EndMode3D()
 
 		switch state.menuState {
+		case "intro":
+			boxX := (int32(screenWidth) / 2) - (600 / 2)
+			boxY := int32(screenHeight) - 180
+			rl.DrawRectangle(boxX, boxY, 600, 150, rl.Black)
+			rl.DrawRectangle(boxX+5, boxY+5, 590, 140, rl.Gray)
+
+			rl.DrawText(introDialogues[currentDialogueIdx], boxX+10, boxY+20, 20, rl.Black)
+			nextBtnRect := rl.NewRectangle(float32(boxX+480), float32(boxY+100), 100, 40)
+
+			buttonLabel := "Next"
+			if currentDialogueIdx == len(introDialogues)-1 {
+				buttonLabel = "Begin"
+			}
+
+			if gui.Button(nextBtnRect, buttonLabel) || rl.IsKeyPressed(rl.KeySpace) {
+				if currentDialogueIdx < len(introDialogues)-1 {
+					currentDialogueIdx++
+				} else {
+					// End of intro: Go to the main menu or start the game
+					state.menuState = "inGame"
+					currentDialogueIdx = 0 // Reset for next time
+					resetGame(&state, &player, &currentLevel)
+				}
+			}
 		case "startMenu":
 			rl.DrawText("Phanton Ronin", 80, 150, 80, rl.Red)
 			startButton = gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 250, 100, 40), "Start")
