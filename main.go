@@ -54,7 +54,7 @@ func initialize() {
 	state = GameState{
 		Level:      1,
 		isSideView: true,
-		isDebug:    true,
+		isDebug:    false,
 		menuState:  "startMenu",
 	}
 }
@@ -253,7 +253,7 @@ func main() {
 			camera.Projection = rl.CameraPerspective
 			camera.Fovy = 45.0
 
-			camera.Position = rl.NewVector3(player.Position.X+6, player.Position.Y+2, 4)
+			camera.Position = rl.NewVector3(player.Position.X+5, player.Position.Y+2, 4)
 			camera.Target = rl.NewVector3(player.Position.X, player.Position.Y, 0)
 
 			player.SPEED = 4.0
@@ -454,8 +454,22 @@ func resetGame(state *GameState, player *Player, currentLevel *Level) {
 		currentLevel.loadLevel("./level-maps/level1.csv")
 	case 2:
 		currentLevel.loadLevel("./level-maps/level2.csv")
-	// case 3:
-	//     currentLevel.loadLevel("./level-maps/level3.csv")
+	case 3:
+		currentLevel.loadLevel("./level-maps/level3.csv")
+	case 4:
+		currentLevel.loadLevel("./level-maps/level4.csv")
+	case 5:
+		currentLevel.loadLevel("./level-maps/level5.csv")
+	case 6:
+		currentLevel.loadLevel("./level-maps/level6.csv")
+	case 7:
+		currentLevel.loadLevel("./level-maps/level7.csv")
+	case 8:
+		currentLevel.loadLevel("./level-maps/level8.csv")
+	case 9:
+		currentLevel.loadLevel("./level-maps/level9.csv")
+	case 10:
+		currentLevel.loadLevel("./level-maps/level10.csv")
 	default:
 		fmt.Println("Game Completed!")
 		state.Level = 0
