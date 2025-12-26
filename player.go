@@ -42,7 +42,7 @@ func (p *Player) draw() {
 	}
 }
 
-func (p *Player) update(isSideView bool, b *Background, g *Ground) {
+func (p *Player) update(isSideView bool, b *Background, g *Ground, jumpSound rl.Sound) {
 	p.Velocity.X = 0.0
 	p.Velocity.Z = 0.0
 
@@ -64,10 +64,12 @@ func (p *Player) update(isSideView bool, b *Background, g *Ground) {
 
 	if rl.IsKeyPressed(rl.KeySpace) {
 		if p.IsGrounded {
+			rl.PlaySound(jumpSound)
 			p.Velocity.Y = JUMP_STRENGTH
 			p.jumpsUsed = 1
 			p.IsGrounded = false
 		} else if p.jumpsUsed == 1 {
+			rl.PlaySound(jumpSound)
 			p.Velocity.Y = JUMP_STRENGTH
 			p.jumpsUsed = 2
 		}

@@ -38,7 +38,7 @@ var introDialogues = []string{
 	"Kaito: The Mage thinks he is safe. He forgot that a\nNinja strikes from the angle you least expect.",
 }
 
-var currentDialogueIdx = 7
+var currentDialogueIdx = 0
 
 type GameState struct {
 	Level      int
@@ -49,12 +49,13 @@ type GameState struct {
 
 func initialize() {
 	rl.InitWindow(screenWidth, screenHeight, "Phantom-Ronin")
+	rl.InitAudioDevice()
 
 	state = GameState{
 		Level:      1,
 		isSideView: true,
 		isDebug:    true,
-		menuState:  "intro",
+		menuState:  "startMenu",
 	}
 }
 
@@ -65,6 +66,40 @@ func initializeCamera() {
 		Up:         rl.NewVector3(0.0, 1.0, 0.0),
 		Fovy:       10.0,
 		Projection: rl.CameraOrthographic,
+	}
+}
+
+func manageMusic(state string, introMusic, gameMusic rl.Music) {
+	var activeMusic rl.Music
+	var inactiveMusic rl.Music
+
+	// 1. Determine which song should be playing
+	if state == "startMenu" || state == "intro" {
+		activeMusic = introMusic
+		inactiveMusic = gameMusic
+	} else if state == "inGame" {
+		activeMusic = gameMusic
+		inactiveMusic = introMusic
+	}
+
+	// 2. Stop the song that shouldn't be playing
+	if rl.IsMusicStreamPlaying(inactiveMusic) {
+		rl.StopMusicStream(inactiveMusic)
+	}
+
+	// 3. Start the active song if it's not playing
+	if !rl.IsMusicStreamPlaying(activeMusic) {
+		rl.PlayMusicStream(activeMusic)
+	}
+
+	// 4. Update the buffer
+	rl.UpdateMusicStream(activeMusic)
+
+	// 5. MANUAL LOOPING LOGIC
+	// Check if the time played has reached the total length
+	if rl.GetMusicTimePlayed(activeMusic) >= rl.GetMusicTimeLength(activeMusic) {
+		rl.StopMusicStream(activeMusic)
+		rl.PlayMusicStream(activeMusic)
 	}
 }
 
@@ -146,6 +181,12 @@ func main() {
 		Texture:         wallTexture,
 	}
 
+	introMusic := rl.LoadMusicStream("./assets/that-game-arcade.mp3")
+	gameMusic := rl.LoadMusicStream("./assets/356-8-bit-chiptune-game-music.mp3")
+	jumpSound := rl.LoadSound("./assets/pixel-jump.mp3")
+	buttonSound := rl.LoadSound("./assets/button-press.mp3")
+	winSound := rl.LoadSound("./assets/piglevelwin2.mp3")
+
 	resetGame(&state, &player, &currentLevel)
 
 	rl.SetTargetFPS(200)
@@ -154,12 +195,14 @@ func main() {
 		isGameOverState := state.menuState == "gameOver"
 		isIntroState := state.menuState == "intro"
 
+		manageMusic(state.menuState, introMusic, gameMusic)
+
 		if isInGameState || isGameOverState {
 			if rl.IsKeyPressed(rl.KeyR) {
 				state.isSideView = !state.isSideView
 			}
 
-			player.update(state.isSideView, &background, &ground)
+			player.update(state.isSideView, &background, &ground, jumpSound)
 		}
 
 		if isIntroState {
@@ -259,10 +302,13 @@ func main() {
 					player.Velocity.Y = 0.0
 
 					if platform.final {
-						if state.isDebug {
-							fmt.Printf("Transitioning to Level %d\n", state.Level)
+						if state.menuState != "levelTransition" {
+							rl.PlaySound(winSound)
+							if state.isDebug {
+								fmt.Printf("Transitioning to Level %d\n", state.Level)
+							}
+							state.menuState = "levelTransition"
 						}
-						state.menuState = "levelTransition"
 					}
 				} else if (player.Position.Y+player.Height/2) <= platformBottom+0.05 && player.Velocity.Y > 0 {
 					// Hitting the platform from below while moving up
@@ -332,10 +378,10 @@ func main() {
 			}
 
 			if gui.Button(nextBtnRect, buttonLabel) || rl.IsKeyPressed(rl.KeySpace) {
+				rl.PlaySound(buttonSound)
 				if currentDialogueIdx < len(introDialogues)-1 {
 					currentDialogueIdx++
 				} else {
-					// End of intro: Go to the main menu or start the game
 					state.menuState = "inGame"
 					currentDialogueIdx = 0 // Reset for next time
 					resetGame(&state, &player, &currentLevel)
@@ -345,17 +391,19 @@ func main() {
 			rl.DrawText("Phanton Ronin", 80, 150, 80, rl.Red)
 			startButton = gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 250, 100, 40), "Start")
 			if startButton {
-				state.menuState = "inGame"
-				resetGame(&state, &player, &currentLevel)
+				rl.PlaySound(buttonSound)
+				state.menuState = "intro"
 			}
 			exitButton = gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 300, 100, 40), "Exit")
 			if exitButton {
+				rl.PlaySound(buttonSound)
 				rl.CloseWindow()
 			}
 		case "levelTransition":
 			rl.DrawText("Level Completed!", 80, 150, 80, rl.Red)
 			transitionButton = gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 250, 100, 40), "Next")
 			if transitionButton {
+				rl.PlaySound(buttonSound)
 				state.menuState = "inGame"
 				state.Level++
 				resetGame(&state, &player, &currentLevel)
@@ -364,6 +412,7 @@ func main() {
 			rl.DrawText("Game Completed!", 70, 190, 80, rl.Red)
 			exitButton = gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 280, 100, 40), "Exit")
 			if exitButton {
+				rl.PlaySound(buttonSound)
 				rl.CloseWindow()
 			}
 		}
@@ -381,6 +430,13 @@ func main() {
 	}
 
 	defer rl.UnloadTexture(backgroundTexture)
+
+	rl.UnloadMusicStream(introMusic)
+	rl.UnloadMusicStream(gameMusic)
+	defer rl.UnloadSound(jumpSound)
+	defer rl.UnloadSound(buttonSound)
+	defer rl.UnloadSound(winSound)
+	rl.CloseAudioDevice()
 }
 
 func resetGame(state *GameState, player *Player, currentLevel *Level) {
