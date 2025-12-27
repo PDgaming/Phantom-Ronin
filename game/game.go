@@ -20,11 +20,12 @@ const (
 )
 
 type GameState struct {
-	Level      int
-	isSideView bool
-	isDebug    bool
-	menuState  string
-	ShowIntro  bool
+	Level           int
+	isSideView      bool
+	isDebug         bool
+	menuState       string
+	ShowIntro       bool
+	UseJiraiyaModel bool
 }
 
 type Game struct {
@@ -69,6 +70,9 @@ type Game struct {
 
 	displayMessageText  string
 	displayMessageTimer float32
+
+	playerModel       rl.Model // New field for the loaded Jiraiya model
+	playerModelLoaded bool     // New field to track if the player model loaded successfully
 }
 
 // Helper function to display messages on screen
@@ -87,12 +91,24 @@ func NewGame() *Game {
 	g.currentAutosaveInterval = g.autosaveInterval
 	g.autosaveTimer = g.currentAutosaveInterval
 
+	// Initialize UseJiraiyaModel
+	g.state.UseJiraiyaModel = false // Default to false
+
+	// Load Jiraiya GLTF model
+	g.playerModel = rl.LoadModel("assets/jiraiya/scene.gltf")
+	g.playerModelLoaded = (g.playerModel.MeshCount > 0) // Check if model loaded successfully using MeshCount
+	if !g.playerModelLoaded {
+		fmt.Println("WARNING: Jiraiya GLTF model not loaded. Falling back to cube.")
+	}
+
 	// Load settings
 	settings, err := LoadSettings()
 	if err != nil {
 		fmt.Printf("Error loading settings, using defaults: %v\n", err)
 	} else {
 		g.state.ShowIntro = settings.ShowIntro
+		// Ensure UseJiraiyaModel is also loaded from settings if available
+		g.state.UseJiraiyaModel = settings.UseJiraiyaModel
 	}
 
 	g.introDialogueManager = dialogue.NewManager([]string{
@@ -130,29 +146,19 @@ func NewGame() *Game {
 		Texture:         g.groundTexture,
 	}
 
-	g.playerTopTexture = rl.LoadTexture("./assets/topTexture.png")
-	g.playerLeftTexture = rl.LoadTexture("./assets/backTexture.png")
-	g.playerRightTexture = rl.LoadTexture("./assets/frontTexture.png")
-	g.playerFrontTexture = rl.LoadTexture("./assets/leftTexture.png")
-	g.playerBackTexture = rl.LoadTexture("./assets/rightTexture.png")
-	g.playerBottomTexture = rl.LoadTexture("./assets/bottomTexture.png")
-
 	g.player = Player{
 		Position: rl.NewVector3(25.0, -1, 0.0),
 		Width:    0.5,
-		Height:   1.0,
-		Length:   0.5,
+		Height:   2.0,
+		Length:   1,
 		Color:    rl.Green,
 
 		SPEED: 8.0,
 
 		TextureProvided: false,
-		topTexture:      g.playerTopTexture,
-		leftTexture:     g.playerLeftTexture,
-		rightTexture:    g.playerRightTexture,
-		frontTexture:    g.playerFrontTexture,
-		backTexture:     g.playerBackTexture,
-		bottomTexture:   g.playerBottomTexture,
+
+		Model:    g.playerModel,                                  // Pass the loaded model
+		UseModel: g.state.UseJiraiyaModel && g.playerModelLoaded, // Pass the flag, also considering if model loaded
 	}
 
 	g.wallTexture = rl.LoadTexture("./assets/wall.jpg")
@@ -175,11 +181,11 @@ func NewGame() *Game {
 		Texture:         g.wallTexture,
 	}
 
-	g.introMusic = rl.LoadMusicStream("./assets/that-game-arcade.mp3")
-	g.gameMusic = rl.LoadMusicStream("./assets/356-8-bit-chiptune-game-music.mp3")
-	g.jumpSound = rl.LoadSound("./assets/pixel-jump.mp3")
-	g.buttonSound = rl.LoadSound("./assets/button-press.mp3")
-	g.winSound = rl.LoadSound("./assets/piglevelwin2.mp3")
+	g.introMusic = rl.LoadMusicStream("./assets/audio/that-game-arcade.mp3")
+	g.gameMusic = rl.LoadMusicStream("./assets/audio/356-8-bit-chiptune-game-music.mp3")
+	g.jumpSound = rl.LoadSound("./assets/audio/pixel-jump.mp3")
+	g.buttonSound = rl.LoadSound("./assets/audio/button-press.mp3")
+	g.winSound = rl.LoadSound("./assets/audio/piglevelwin2.mp3")
 
 	g.resetGame(g.state.Level)
 
@@ -559,17 +565,28 @@ func (g *Game) drawUI() {
 		g.state.ShowIntro = gui.CheckBox(rl.NewRectangle(float32(screenWidth)/2-50, 250, 20, 20), "Show Intro", g.state.ShowIntro)
 
 		if g.state.ShowIntro != initialShowIntro {
-			err := SaveSettings(SettingsData{ShowIntro: g.state.ShowIntro})
+			err := SaveSettings(SettingsData{ShowIntro: g.state.ShowIntro, UseJiraiyaModel: g.state.UseJiraiyaModel})
 			if err != nil {
 				fmt.Printf("Error saving settings: %v\n", err)
 			}
 		}
 
-		backButton := gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 300, 100, 40), "Back")
+		// Add checkbox for UseJiraiyaModel
+		initialUseJiraiyaModel := g.state.UseJiraiyaModel
+		g.state.UseJiraiyaModel = gui.CheckBox(rl.NewRectangle(float32(screenWidth)/2-50, 280, 20, 20), "Use Jiraiya Model", g.state.UseJiraiyaModel)
+
+		if g.state.UseJiraiyaModel != initialUseJiraiyaModel {
+			err := SaveSettings(SettingsData{ShowIntro: g.state.ShowIntro, UseJiraiyaModel: g.state.UseJiraiyaModel})
+			if err != nil {
+				fmt.Printf("Error saving settings: %v\n", err)
+			}
+		}
+
+		backButton := gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 320, 100, 40), "Back") // Adjusted Y position
 		if backButton {
 			rl.PlaySound(g.buttonSound)
 			// Ensure settings are saved when leaving the settings menu
-			err := SaveSettings(SettingsData{ShowIntro: g.state.ShowIntro})
+			err := SaveSettings(SettingsData{ShowIntro: g.state.ShowIntro, UseJiraiyaModel: g.state.UseJiraiyaModel})
 			if err != nil {
 				fmt.Printf("Error saving settings: %v\n", err)
 			}
@@ -612,7 +629,14 @@ func (g *Game) drawUI() {
 			}
 		}
 
-		mainMenuButton := gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 350, 100, 40), "Main Menu")
+		resetLevelButton := gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 350, 100, 40), "Reset Level")
+		if resetLevelButton {
+			rl.PlaySound(g.buttonSound)
+			g.resetGame(g.state.Level)
+			g.state.menuState = "inGame" // Optionally return to inGame state after reset
+		}
+
+		mainMenuButton := gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 400, 100, 40), "Main Menu")
 		if mainMenuButton {
 			rl.PlaySound(g.buttonSound)
 			g.state.menuState = "startMenu"
@@ -658,6 +682,7 @@ func (g *Game) unload() {
 	rl.UnloadSound(g.jumpSound)
 	rl.UnloadSound(g.buttonSound)
 	rl.UnloadSound(g.winSound)
+	rl.UnloadModel(g.playerModel) // Unload the Jiraiya GLTF model
 	rl.CloseAudioDevice()
 	rl.CloseWindow()
 }

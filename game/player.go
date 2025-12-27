@@ -16,6 +16,9 @@ type Player struct {
 	Rotation float32
 	Color    rl.Color
 
+	Model    rl.Model // New field for the loaded GLTF model
+	UseModel bool     // New field to toggle between model and cube
+
 	Velocity     rl.Vector3
 	Acceleration rl.Vector3
 	Mass         float32
@@ -35,7 +38,41 @@ type Player struct {
 }
 
 func (p *Player) draw() {
-	if !p.TextureProvided {
+	if p.UseModel {
+		// Define scaling and offset constants for the Jiraiya model
+		// Define scaling and offset constants for the Jiraiya model
+		const JIRAIYA_MODEL_VISUAL_HEIGHT = 2.0 // Actual visual height of the Jiraiya model in its default scale
+
+		// The player's physics height (p.Height) is 2.0 (from Game struct initialization)
+		// The visual model's height is JIRAIYA_MODEL_VISUAL_HEIGHT = 2.0
+		// This makes the visual model 2.0 units tall, matching p.Height.
+
+		// Model's feet should be at p.Position.Y - p.Height/2 (bottom of the physics box)
+		// If the model's origin is at its center, and its scaled height is 2.0, its feet are at modelPosition.Y - 1.0.
+		// So, modelPosition.Y - 1.0 = p.Position.Y - p.Height/2
+		// modelPosition.Y = p.Position.Y - p.Height/2 + 1.0
+		// Since p.Height = 2.0, p.Height/2 = 1.0.
+		// modelPosition.Y = p.Position.Y - 1.0 + 1.0 = p.Position.Y
+
+		// Corrected model position calculation:
+		// Target Y for model's base: p.Position.Y - p.Height/2
+		// Model's inherent Y offset from its center to its base (after scaling): JIRAIYA_MODEL_VISUAL_HEIGHT/2 = 1.0
+		// So, the model's center should be at: (p.Position.Y - p.Height/2) + (JIRAIYA_MODEL_VISUAL_HEIGHT/2)
+		modelPosition := rl.NewVector3(
+			p.Position.X,
+			p.Position.Y-p.Height/2+(JIRAIYA_MODEL_VISUAL_HEIGHT/2),
+			p.Position.Z,
+		)
+
+		modelScale := rl.NewVector3(1, 1, 1)
+
+		// Rotate the model so it faces forward (assuming GLTF +X is forward, need to rotate to +Z)
+		modelRotationAxis := rl.NewVector3(0, 1, 0) // Y-axis rotation
+		modelRotationAngle := float32(90.0)         // Rotate 90 degrees around Y to align X with Z
+
+		rl.DrawModelEx(p.Model, modelPosition, modelRotationAxis, modelRotationAngle, modelScale, rl.White)
+
+	} else if !p.TextureProvided {
 		rl.DrawCube(p.Position, p.Width, p.Height, p.Length, p.Color)
 	} else {
 		DrawCubeTextureRec_Player(p.topTexture, p.leftTexture, p.rightTexture, p.frontTexture, p.backTexture, p.bottomTexture, rl.Rectangle{X: 0, Y: 0, Width: float32(p.topTexture.Width), Height: float32(p.topTexture.Height)}, p.Position, p.Width, p.Height, p.Length, p.Color)

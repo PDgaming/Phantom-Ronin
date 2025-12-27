@@ -1,3 +1,4 @@
 {
-  "ShowIntro": true
+  "ShowIntro": true,
+  "UseJiraiyaModel": true
 }

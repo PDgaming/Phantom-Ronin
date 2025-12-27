@@ -20,6 +20,7 @@ type SaveData struct {
 
 type SettingsData struct {
 	ShowIntro bool
+	UseJiraiyaModel bool
 }
 
 func ensureSaveDirectory() error {
@@ -90,12 +91,14 @@ func SaveSettings(settings SettingsData) error {
 func LoadSettings() (SettingsData, error) {
 	data, err := os.ReadFile(filepath.Join(saveDir, "settings.json"))
 	if err != nil {
-		return SettingsData{ShowIntro: true}, err // Default to true if file not found
+		// Default values if file not found
+		return SettingsData{ShowIntro: true, UseJiraiyaModel: false}, err
 	}
 
 	var settings SettingsData
 	if err := json.Unmarshal(data, &settings); err != nil {
-		return SettingsData{ShowIntro: true}, err // Default to true if unmarshal fails
+		// Default values if unmarshal fails
+		return SettingsData{ShowIntro: true, UseJiraiyaModel: false}, err
 	}
 	return settings, nil
 }
