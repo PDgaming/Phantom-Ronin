@@ -1,4 +1,4 @@
-package main
+package game
 
 import rl "github.com/gen2brain/raylib-go/raylib"
 
@@ -82,7 +82,7 @@ func DrawCubeTextureRec_Background(texture rl.Texture2D, source rl.Rectangle, po
 	rl.Normal3f(1.0, 0.0, 0.0)
 	rl.TexCoord2f((source.X+source.Width)/texWidth, (source.Y+source.Height)/texHeight)
 	rl.Vertex3f(x+width/2, y-height/2, z-length/2)
-	rl.TexCoord2f((source.X+source.Width)/texWidth, source.Y/texHeight)
+	rl.TexCoord2f((source.X+source.Width)/texHeight, source.Y/texHeight)
 	rl.Vertex3f(x+width/2, y+height/2, z-length/2)
 	rl.TexCoord2f(source.X/texWidth, source.Y/texHeight)
 	rl.Vertex3f(x+width/2, y+height/2, z+length/2)
@@ -144,7 +144,7 @@ func DrawCubeTextureRec_Platform(topTexture rl.Texture2D, sideTexture rl.Texture
 	rl.Normal3f(1.0, 0.0, 0.0)
 	rl.TexCoord2f((source.X+source.Width)/texWidth, (source.Y+source.Height)/texHeight)
 	rl.Vertex3f(x+width/2, y-height/2, z-length/2)
-	rl.TexCoord2f((source.X+source.Width)/texWidth, source.Y/texHeight)
+	rl.TexCoord2f((source.X+source.Width)/texHeight, source.Y/texHeight)
 	rl.Vertex3f(x+width/2, y+height/2, z-length/2)
 	rl.TexCoord2f(source.X/texWidth, source.Y/texHeight)
 	rl.Vertex3f(x+width/2, y+height/2, z+length/2)
@@ -335,14 +335,12 @@ func DrawCubeTextureRec_Player(topTexture rl.Texture2D, leftTexture rl.Texture2D
 	rl.Normal3f(1.0, 0.0, 0.0)
 	rl.TexCoord2f((source.X+source.Width)/texWidth, (source.Y+source.Height)/texHeight)
 	rl.Vertex3f(x+width/2, y-height/2, z-length/2)
-	rl.TexCoord2f((source.X+source.Width)/texWidth, source.Y/texHeight)
+	rl.TexCoord2f((source.X+source.Width)/texHeight, source.Y/texHeight)
 	rl.Vertex3f(x+width/2, y+height/2, z-length/2)
 	rl.TexCoord2f(source.X/texWidth, source.Y/texHeight)
 	rl.Vertex3f(x+width/2, y+height/2, z+length/2)
 	rl.TexCoord2f(source.X/texWidth, (source.Y+source.Height)/texHeight)
 	rl.Vertex3f(x+width/2, y-height/2, z+length/2)
-
-	rl.SetTexture(leftTexture.ID)
 
 	// Left face
 	rl.Normal3f(-1.0, 0.0, 0.0)
