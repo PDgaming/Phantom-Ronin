@@ -24,6 +24,7 @@ type GameState struct {
 	isSideView bool
 	isDebug    bool
 	menuState  string
+	ShowIntro  bool
 }
 
 type Game struct {
@@ -166,7 +167,9 @@ func (g *Game) initialize() {
 		isSideView: true,
 		isDebug:    false,
 		menuState:  "startMenu",
+		ShowIntro:  true,
 	}
+	rl.SetExitKey(rl.KeyNull)
 }
 
 func (g *Game) initializeCamera() {
@@ -246,6 +249,16 @@ func (g *Game) resetGame(level int) {
 func (g *Game) Run() {
 	rl.SetTargetFPS(200)
 	for !rl.WindowShouldClose() {
+		if rl.IsKeyPressed(rl.KeyEscape) {
+			if g.state.menuState == "inGame" {
+				g.state.menuState = "paused"
+			} else if g.state.menuState == "paused" {
+				g.state.menuState = "inGame"
+			} else {
+				rl.CloseWindow()
+			}
+		}
+
 		g.update()
 		g.draw()
 	}
@@ -456,7 +469,12 @@ func (g *Game) drawUI() {
 		g.startButton = gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 250, 100, 40), "Start")
 		if g.startButton {
 			rl.PlaySound(g.buttonSound)
-			g.state.menuState = "intro"
+			if g.state.ShowIntro {
+				g.state.menuState = "intro"
+			} else {
+				g.state.menuState = "inGame"
+				g.resetGame(g.state.Level)
+			}
 		}
 		loadButton := gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 300, 100, 40), "Load Game")
 		if loadButton {
@@ -467,11 +485,29 @@ func (g *Game) drawUI() {
 				g.state.menuState = "intro"
 			}
 		}
-		g.exitButton = gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 350, 100, 40), "Exit")
+
+		settingsButton := gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 350, 100, 40), "Settings")
+		if settingsButton {
+			rl.PlaySound(g.buttonSound)
+			g.state.menuState = "settings"
+		}
+
+		g.exitButton = gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 400, 100, 40), "Exit")
 		if g.exitButton {
 			rl.PlaySound(g.buttonSound)
 			rl.CloseWindow()
 		}
+
+	case "settings":
+		rl.DrawText("Settings", 80, 150, 80, rl.Red)
+		g.state.ShowIntro = gui.CheckBox(rl.NewRectangle(float32(screenWidth)/2-50, 250, 20, 20), "Show Intro", g.state.ShowIntro)
+
+		backButton := gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 300, 100, 40), "Back")
+		if backButton {
+			rl.PlaySound(g.buttonSound)
+			g.state.menuState = "startMenu"
+		}
+
 	case "inGame":
 		g.pauseButton = gui.Button(rl.NewRectangle(float32(screenWidth)-60, 10, 50, 30), "Pause")
 		if g.pauseButton {
@@ -494,6 +530,12 @@ func (g *Game) drawUI() {
 			} else {
 				fmt.Println("Game saved successfully")
 			}
+		}
+
+		mainMenuButton := gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 350, 100, 40), "Main Menu")
+		if mainMenuButton {
+			rl.PlaySound(g.buttonSound)
+			g.state.menuState = "startMenu"
 		}
 
 		g.exitButton = gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 300, 100, 40), "Exit")

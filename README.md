@@ -29,7 +29,7 @@ This will open a window titled "Phantom-Ronin" at 800x480.
 To build a binary:
 
 ```bash
-go build -o Phantom.Ronin .
+go build -v -ldflags '-s -w' -o Phantom_Ronin
 ```
 
 ## Controls
