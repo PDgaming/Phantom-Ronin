@@ -151,7 +151,7 @@ func NewGame() *Game {
 	g.buttonSound = rl.LoadSound("./assets/button-press.mp3")
 	g.winSound = rl.LoadSound("./assets/piglevelwin2.mp3")
 
-	g.resetGame()
+	g.resetGame(g.state.Level)
 
 	return g
 }
@@ -207,7 +207,8 @@ func (g *Game) manageMusic() {
 	}
 }
 
-func (g *Game) resetGame() {
+func (g *Game) resetGame(level int) {
+	g.state.Level = level
 	g.player.Position = rl.NewVector3(0.0, -1.0, 0.0)
 	g.player.Velocity = rl.NewVector3(0.0, 0.0, 0.0)
 	g.player.IsGrounded = true
@@ -448,7 +449,7 @@ func (g *Game) drawUI() {
 		if g.introDialogueManager.Update(g.buttonSound) {
 			g.state.menuState = "inGame"
 			g.introDialogueManager.Reset()
-			g.resetGame()
+			g.resetGame(g.state.Level)
 		}
 	case "startMenu":
 		rl.DrawText("Phanton Ronin", 80, 150, 80, rl.Red)
@@ -457,7 +458,16 @@ func (g *Game) drawUI() {
 			rl.PlaySound(g.buttonSound)
 			g.state.menuState = "intro"
 		}
-		g.exitButton = gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 300, 100, 40), "Exit")
+		loadButton := gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 300, 100, 40), "Load Game")
+		if loadButton {
+			rl.PlaySound(g.buttonSound)
+			err := g.loadGame("savegame.json")
+			if err != nil {
+				fmt.Println("Could not load save game:", err)
+				g.state.menuState = "intro"
+			}
+		}
+		g.exitButton = gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 350, 100, 40), "Exit")
 		if g.exitButton {
 			rl.PlaySound(g.buttonSound)
 			rl.CloseWindow()
@@ -475,8 +485,16 @@ func (g *Game) drawUI() {
 			g.state.menuState = "inGame"
 		}
 
-		// Placeholder for Save Button
-		gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 250, 100, 40), "Save")
+		saveButton := gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 250, 100, 40), "Save")
+		if saveButton {
+			rl.PlaySound(g.buttonSound)
+			err := g.saveGame("savegame.json")
+			if err != nil {
+				fmt.Println("Error saving game:", err)
+			} else {
+				fmt.Println("Game saved successfully")
+			}
+		}
 
 		g.exitButton = gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 300, 100, 40), "Exit")
 		if g.exitButton {
@@ -490,7 +508,7 @@ func (g *Game) drawUI() {
 			rl.PlaySound(g.buttonSound)
 			g.state.menuState = "inGame"
 			g.state.Level++
-			g.resetGame()
+			g.resetGame(g.state.Level)
 		}
 	case "gameOver":
 		rl.DrawText("Game Completed!", 70, 190, 80, rl.Red)
