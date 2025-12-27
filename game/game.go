@@ -122,7 +122,7 @@ func NewGame() *Game {
 		"Kaito: The Mage thinks he is safe. He forgot that a\nNinja strikes from the angle you least expect.",
 	}, screenWidth, screenHeight)
 
-	g.backgroundTexture = rl.LoadTexture("./assets/background.png")
+	g.backgroundTexture = rl.LoadTexture("./assets/images/background.png")
 	g.background = Background{
 		Position: rl.NewVector3(0, 0, -1.0),
 		Height:   worldHeight,
@@ -134,7 +134,7 @@ func NewGame() *Game {
 		TextureProvided: true,
 	}
 
-	g.groundTexture = rl.LoadTexture("./assets/grass.jpg")
+	g.groundTexture = rl.LoadTexture("./assets/images/grass.jpg")
 	g.ground = Ground{
 		Position: rl.NewVector3(0.0, -3.5, 0.1),
 		Height:   0.2,
@@ -161,7 +161,7 @@ func NewGame() *Game {
 		UseModel: g.state.UseJiraiyaModel && g.playerModelLoaded, // Pass the flag, also considering if model loaded
 	}
 
-	g.wallTexture = rl.LoadTexture("./assets/wall.jpg")
+	g.wallTexture = rl.LoadTexture("./assets/images/wall.jpg")
 	g.leftWall = Wall{
 		Position:        rl.NewVector3(g.ground.Position.X, g.ground.Position.Y+2.5+g.ground.Height/2, 0.1),
 		Width:           1,
@@ -200,7 +200,7 @@ func (g *Game) initialize() {
 	g.state = GameState{
 		Level:      1,
 		isSideView: true,
-		isDebug:    true,
+		isDebug:    false,
 		menuState:  "startMenu",
 		ShowIntro:  true,
 	}
