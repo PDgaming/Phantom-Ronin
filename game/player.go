@@ -42,7 +42,7 @@ func (p *Player) draw() {
 	}
 }
 
-func (p *Player) update(isSideView bool, b *Background, g *Ground, jumpSound rl.Sound) {
+func (p *Player) update(isSideView bool, g *Ground, jumpSound rl.Sound) {
 	p.Velocity.X = 0.0
 	p.Velocity.Z = 0.0
 

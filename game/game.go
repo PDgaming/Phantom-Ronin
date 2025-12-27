@@ -58,6 +58,7 @@ type Game struct {
 	exitButton       bool
 	startButton      bool
 	transitionButton bool
+	pauseButton      bool
 }
 
 func NewGame() *Game {
@@ -255,15 +256,18 @@ func (g *Game) update() {
 	isInGameState := g.state.menuState == "inGame"
 	isGameOverState := g.state.menuState == "gameOver"
 	isIntroState := g.state.menuState == "intro"
+	isPausedState := g.state.menuState == "paused"
 
 	g.manageMusic()
 
-	if isInGameState || isGameOverState {
+	if isPausedState {
+		// PAUSED STATE
+	} else if isInGameState || isGameOverState {
 		if rl.IsKeyPressed(rl.KeyR) {
 			g.state.isSideView = !g.state.isSideView
 		}
 
-		g.player.update(g.state.isSideView, &g.background, &g.ground, g.jumpSound)
+		g.player.update(g.state.isSideView, &g.ground, g.jumpSound)
 	}
 
 	if isIntroState {
@@ -453,6 +457,27 @@ func (g *Game) drawUI() {
 			rl.PlaySound(g.buttonSound)
 			g.state.menuState = "intro"
 		}
+		g.exitButton = gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 300, 100, 40), "Exit")
+		if g.exitButton {
+			rl.PlaySound(g.buttonSound)
+			rl.CloseWindow()
+		}
+	case "inGame":
+		g.pauseButton = gui.Button(rl.NewRectangle(float32(screenWidth)-60, 10, 50, 30), "Pause")
+		if g.pauseButton {
+			rl.PlaySound(g.buttonSound)
+			g.state.menuState = "paused"
+		}
+	case "paused":
+		g.startButton = gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 200, 100, 40), "Resume")
+		if g.startButton {
+			rl.PlaySound(g.buttonSound)
+			g.state.menuState = "inGame"
+		}
+
+		// Placeholder for Save Button
+		gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 250, 100, 40), "Save")
+
 		g.exitButton = gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 300, 100, 40), "Exit")
 		if g.exitButton {
 			rl.PlaySound(g.buttonSound)
