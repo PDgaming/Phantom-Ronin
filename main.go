@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Phantom_Ronin/dialogue"
 	"fmt"
 
 	gui "github.com/gen2brain/raylib-go/raygui"
@@ -19,26 +20,14 @@ const (
 )
 
 var (
-	currentLevel     Level
-	exitButton       bool
-	startButton      bool
-	transitionButton bool
-	state            GameState
-	camera           rl.Camera3D
+	currentLevel         Level
+	exitButton           bool
+	startButton          bool
+	transitionButton     bool
+	state                GameState
+	camera               rl.Camera3D
+	introDialogueManager *dialogue.Manager
 )
-
-var introDialogues = []string{
-	"Kaito: My village didn't fall to swords or steel. It fell to\na whisper of black magic...",
-	"Kaito: The Mage sits in his high tower, weaving a spell\nthat anchors our world to the void.",
-	"Kaito: But the path to him is guarded by the Magical\nMountains...",
-	"Kaito: To most, this world is flat. A simple path of left\nand right.",
-	"Kaito: But I carry the Gaze of the Void. I can see the\nworld as it truly is.",
-	"Kaito: When a wall blocks my path, I do not turn back. I\nshift my reality.",
-	"Press [R] to Shift your Perspective. See the world from\na new angle.",
-	"Kaito: The Mage thinks he is safe. He forgot that a\nNinja strikes from the angle you least expect.",
-}
-
-var currentDialogueIdx = 0
 
 type GameState struct {
 	Level      int
@@ -107,6 +96,18 @@ func main() {
 	initialize()
 	defer rl.CloseWindow()
 	initializeCamera()
+
+	introDialogues := []string{
+		"Kaito: My village didn't fall to swords or steel. It fell to\na whisper of black magic...",
+		"Kaito: The Mage sits in his high tower, weaving a spell\nthat anchors our world to the void.",
+		"Kaito: But the path to him is guarded by the Magical\nMountains...",
+		"Kaito: To most, this world is flat. A simple path of left\nand right.",
+		"Kaito: But I carry the Gaze of the Void. I can see the\nworld as it truly is.",
+		"Kaito: When a wall blocks my path, I do not turn back. I\nshift my reality.",
+		"Press [R] to Shift your Perspective. See the world from\na new angle.",
+		"Kaito: The Mage thinks he is safe. He forgot that a\nNinja strikes from the angle you least expect.",
+	}
+	introDialogueManager = dialogue.NewManager(introDialogues, screenWidth, screenHeight)
 
 	backgroundTexture := rl.LoadTexture("./assets/background.png")
 
@@ -364,28 +365,11 @@ func main() {
 
 		switch state.menuState {
 		case "intro":
-			boxX := (int32(screenWidth) / 2) - (600 / 2)
-			boxY := int32(screenHeight) - 180
-			rl.DrawRectangle(boxX, boxY, 600, 150, rl.Black)
-			rl.DrawRectangle(boxX+5, boxY+5, 590, 140, rl.Gray)
-
-			rl.DrawText(introDialogues[currentDialogueIdx], boxX+10, boxY+20, 20, rl.Black)
-			nextBtnRect := rl.NewRectangle(float32(boxX+480), float32(boxY+100), 100, 40)
-
-			buttonLabel := "Next"
-			if currentDialogueIdx == len(introDialogues)-1 {
-				buttonLabel = "Begin"
-			}
-
-			if gui.Button(nextBtnRect, buttonLabel) || rl.IsKeyPressed(rl.KeySpace) {
-				rl.PlaySound(buttonSound)
-				if currentDialogueIdx < len(introDialogues)-1 {
-					currentDialogueIdx++
-				} else {
-					state.menuState = "inGame"
-					currentDialogueIdx = 0 // Reset for next time
-					resetGame(&state, &player, &currentLevel)
-				}
+			introDialogueManager.Draw()
+			if introDialogueManager.Update(buttonSound) {
+				state.menuState = "inGame"
+				introDialogueManager.Reset()
+				resetGame(&state, &player, &currentLevel)
 			}
 		case "startMenu":
 			rl.DrawText("Phanton Ronin", 80, 150, 80, rl.Red)
