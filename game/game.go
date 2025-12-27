@@ -157,7 +157,7 @@ func NewGame() *Game {
 }
 
 func (g *Game) initialize() {
-	rl.SetConfigFlags(rl.FlagVsyncHint)
+	rl.SetConfigFlags(rl.FlagMsaa4xHint | rl.FlagWindowResizable)
 	rl.InitWindow(screenWidth, screenHeight, "Phantom-Ronin")
 	rl.InitAudioDevice()
 	g.initializeCamera()
