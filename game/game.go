@@ -60,11 +60,40 @@ type Game struct {
 	startButton      bool
 	transitionButton bool
 	pauseButton      bool
+
+	// Autosave fields
+	autosaveTimer                float32
+	autosaveInterval             float32
+	autosaveDelayAfterManualSave float32
+	currentAutosaveInterval      float32
+
+	displayMessageText  string
+	displayMessageTimer float32
+}
+
+// Helper function to display messages on screen
+func (g *Game) displayMessage(text string, duration float32) {
+	g.displayMessageText = text
+	g.displayMessageTimer = duration
 }
 
 func NewGame() *Game {
 	g := &Game{}
 	g.initialize()
+
+	// Initialize autosave fields
+	g.autosaveInterval = 10.0             // Default autosave interval
+	g.autosaveDelayAfterManualSave = 30.0 // Delay after manual save
+	g.currentAutosaveInterval = g.autosaveInterval
+	g.autosaveTimer = g.currentAutosaveInterval
+
+	// Load settings
+	settings, err := LoadSettings()
+	if err != nil {
+		fmt.Printf("Error loading settings, using defaults: %v\n", err)
+	} else {
+		g.state.ShowIntro = settings.ShowIntro
+	}
 
 	g.introDialogueManager = dialogue.NewManager([]string{
 		"Kaito: My village didn't fall to swords or steel. It fell to\na whisper of black magic...",
@@ -165,7 +194,7 @@ func (g *Game) initialize() {
 	g.state = GameState{
 		Level:      1,
 		isSideView: true,
-		isDebug:    false,
+		isDebug:    true,
 		menuState:  "startMenu",
 		ShowIntro:  true,
 	}
@@ -267,12 +296,37 @@ func (g *Game) Run() {
 }
 
 func (g *Game) update() {
+	// Decrement message timer if active
+	if g.displayMessageTimer > 0 {
+		g.displayMessageTimer -= rl.GetFrameTime()
+	}
+
 	isInGameState := g.state.menuState == "inGame"
 	isGameOverState := g.state.menuState == "gameOver"
 	isIntroState := g.state.menuState == "intro"
 	isPausedState := g.state.menuState == "paused"
 
 	g.manageMusic()
+
+	if isInGameState {
+		// Log autosave timer in debug mode
+		if g.state.isDebug {
+			fmt.Printf("Autosave in: %.1f seconds\n", g.autosaveTimer)
+		}
+
+		// Update autosave timer
+		g.autosaveTimer -= rl.GetFrameTime()
+		if g.autosaveTimer <= 0 {
+			err := g.saveGame()
+			if err != nil {
+				fmt.Printf("Error autosaving game: %v\n", err)
+			} else {
+				g.displayMessage("Game autosaved!", 2.0) // Display autosave message
+			}
+			g.autosaveTimer = g.currentAutosaveInterval
+			g.currentAutosaveInterval = g.autosaveInterval // Reset to regular interval after any save
+		}
+	}
 
 	if isPausedState {
 		// PAUSED STATE
@@ -479,7 +533,7 @@ func (g *Game) drawUI() {
 		loadButton := gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 300, 100, 40), "Load Game")
 		if loadButton {
 			rl.PlaySound(g.buttonSound)
-			err := g.loadGame("savegame.json")
+			err := g.loadGame()
 			if err != nil {
 				fmt.Println("Could not load save game:", err)
 				g.state.menuState = "intro"
@@ -500,11 +554,25 @@ func (g *Game) drawUI() {
 
 	case "settings":
 		rl.DrawText("Settings", 80, 150, 80, rl.Red)
+		// Store the initial state to check for changes
+		initialShowIntro := g.state.ShowIntro
 		g.state.ShowIntro = gui.CheckBox(rl.NewRectangle(float32(screenWidth)/2-50, 250, 20, 20), "Show Intro", g.state.ShowIntro)
+
+		if g.state.ShowIntro != initialShowIntro {
+			err := SaveSettings(SettingsData{ShowIntro: g.state.ShowIntro})
+			if err != nil {
+				fmt.Printf("Error saving settings: %v\n", err)
+			}
+		}
 
 		backButton := gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 300, 100, 40), "Back")
 		if backButton {
 			rl.PlaySound(g.buttonSound)
+			// Ensure settings are saved when leaving the settings menu
+			err := SaveSettings(SettingsData{ShowIntro: g.state.ShowIntro})
+			if err != nil {
+				fmt.Printf("Error saving settings: %v\n", err)
+			}
 			g.state.menuState = "startMenu"
 		}
 
@@ -524,11 +592,23 @@ func (g *Game) drawUI() {
 		saveButton := gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 250, 100, 40), "Save")
 		if saveButton {
 			rl.PlaySound(g.buttonSound)
-			err := g.saveGame("savegame.json")
+			err := g.saveGame()
 			if err != nil {
 				fmt.Println("Error saving game:", err)
 			} else {
 				fmt.Println("Game saved successfully")
+				g.currentAutosaveInterval = g.autosaveDelayAfterManualSave // Set delay for next autosave
+				g.autosaveTimer = g.currentAutosaveInterval                // Reset timer with new interval
+			}
+		}
+
+		loadButton := gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 300, 100, 40), "Load Game")
+		if loadButton {
+			rl.PlaySound(g.buttonSound)
+			err := g.loadGame()
+			if err != nil {
+				fmt.Println("Could not load save game:", err)
+				g.state.menuState = "intro"
 			}
 		}
 
@@ -536,12 +616,6 @@ func (g *Game) drawUI() {
 		if mainMenuButton {
 			rl.PlaySound(g.buttonSound)
 			g.state.menuState = "startMenu"
-		}
-
-		g.exitButton = gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 300, 100, 40), "Exit")
-		if g.exitButton {
-			rl.PlaySound(g.buttonSound)
-			rl.CloseWindow()
 		}
 	case "levelTransition":
 		rl.DrawText("Level Completed!", 80, 150, 80, rl.Red)
@@ -559,6 +633,12 @@ func (g *Game) drawUI() {
 			rl.PlaySound(g.buttonSound)
 			rl.CloseWindow()
 		}
+	}
+
+	// Draw messages
+	if g.displayMessageTimer > 0 && g.displayMessageText != "" {
+		textWidth := rl.MeasureText(g.displayMessageText, 20)
+		rl.DrawText(g.displayMessageText, int32(screenWidth)/2-textWidth/2, int32(screenHeight)-50, 20, rl.Green)
 	}
 }
 

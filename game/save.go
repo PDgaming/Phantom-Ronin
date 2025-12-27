@@ -3,9 +3,12 @@ package game
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
+
+const saveDir = "save"
 
 type SaveData struct {
 	Level      int
@@ -15,7 +18,22 @@ type SaveData struct {
 	JumpsUsed  int
 }
 
-func (g *Game) saveGame(filename string) error {
+type SettingsData struct {
+	ShowIntro bool
+}
+
+func ensureSaveDirectory() error {
+	if _, err := os.Stat(saveDir); os.IsNotExist(err) {
+		return os.MkdirAll(saveDir, 0755)
+	}
+	return nil
+}
+
+func (g *Game) saveGame() error {
+	if err := ensureSaveDirectory(); err != nil {
+		return err
+	}
+
 	saveData := SaveData{
 		Level:      g.state.Level,
 		Position:   g.player.Position,
@@ -29,11 +47,11 @@ func (g *Game) saveGame(filename string) error {
 		return err
 	}
 
-	return os.WriteFile(filename, data, 0644)
+	return os.WriteFile(filepath.Join(saveDir, "savegame.json"), data, 0644)
 }
 
-func (g *Game) loadGame(filename string) error {
-	data, err := os.ReadFile(filename)
+func (g *Game) loadGame() error {
+	data, err := os.ReadFile(filepath.Join(saveDir, "savegame.json"))
 	if err != nil {
 		return err
 	}
@@ -54,4 +72,30 @@ func (g *Game) loadGame(filename string) error {
 	g.state.menuState = "inGame"
 
 	return nil
+}
+
+func SaveSettings(settings SettingsData) error {
+	if err := ensureSaveDirectory(); err != nil {
+		return err
+	}
+
+	data, err := json.MarshalIndent(settings, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(filepath.Join(saveDir, "settings.json"), data, 0644)
+}
+
+func LoadSettings() (SettingsData, error) {
+	data, err := os.ReadFile(filepath.Join(saveDir, "settings.json"))
+	if err != nil {
+		return SettingsData{ShowIntro: true}, err // Default to true if file not found
+	}
+
+	var settings SettingsData
+	if err := json.Unmarshal(data, &settings); err != nil {
+		return SettingsData{ShowIntro: true}, err // Default to true if unmarshal fails
+	}
+	return settings, nil
 }
