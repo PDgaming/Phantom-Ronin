@@ -178,12 +178,15 @@ func (g *Game) draw() {
 	drawPlatforms(g)
 	g.gameObjects.player.draw()
 
+	if g.state.isDebug {
+		drawBoundingBoxes(g)
+	}
+
 	rl.EndMode3D()
 
 	g.drawUI()
 
 	if g.state.isDebug {
-		drawBoundingBoxes(g)
 		drawDebugInfo(g)
 	} else {
 		rl.DrawText(fmt.Sprintf("Level: %d", g.state.Level), 10, 30, 18, rl.Orange)
