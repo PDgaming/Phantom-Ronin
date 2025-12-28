@@ -15,6 +15,28 @@ type Wall struct {
 	Texture         rl.Texture2D
 }
 
+func (g *Game) initializeWalls() {
+	g.textures.wallTexture = rl.LoadTexture("./assets/images/wall.jpg")
+	g.gameObjects.leftWall = Wall{
+		Position:        rl.NewVector3(g.gameObjects.ground.Position.X, g.gameObjects.ground.Position.Y+2.5+g.gameObjects.ground.Height/2, 0.1),
+		Width:           1,
+		Height:          5,
+		Length:          g.gameObjects.ground.Length,
+		Color:           rl.DarkBrown,
+		TextureProvided: true,
+		Texture:         g.textures.wallTexture,
+	}
+	g.gameObjects.rightWall = Wall{
+		Position:        rl.NewVector3(g.gameObjects.ground.Width, g.gameObjects.ground.Position.Y+2.5+g.gameObjects.ground.Height/2, 0.1),
+		Width:           1,
+		Height:          5,
+		Length:          g.gameObjects.ground.Length,
+		Color:           rl.DarkBrown,
+		TextureProvided: true,
+		Texture:         g.textures.wallTexture,
+	}
+}
+
 func (p *Wall) draw() {
 	if !p.TextureProvided {
 		rl.DrawCube(p.Position, p.Width, p.Height, p.Length, p.Color)

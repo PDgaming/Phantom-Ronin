@@ -19,7 +19,7 @@ type SaveData struct {
 }
 
 type SettingsData struct {
-	ShowIntro bool
+	ShowIntro       bool
 	UseJiraiyaModel bool
 }
 
@@ -37,10 +37,10 @@ func (g *Game) saveGame() error {
 
 	saveData := SaveData{
 		Level:      g.state.Level,
-		Position:   g.player.Position,
-		Velocity:   g.player.Velocity,
-		IsGrounded: g.player.IsGrounded,
-		JumpsUsed:  g.player.jumpsUsed,
+		Position:   g.gameObjects.player.Position,
+		Velocity:   g.gameObjects.player.Velocity,
+		IsGrounded: g.gameObjects.player.IsGrounded,
+		JumpsUsed:  g.gameObjects.player.jumpsUsed,
 	}
 
 	data, err := json.MarshalIndent(saveData, "", "  ")
@@ -65,10 +65,10 @@ func (g *Game) loadGame() error {
 	g.resetGame(saveData.Level) // reset to the level from the save
 
 	// After resetting, apply the saved player state
-	g.player.Position = saveData.Position
-	g.player.Velocity = saveData.Velocity
-	g.player.IsGrounded = saveData.IsGrounded
-	g.player.jumpsUsed = saveData.JumpsUsed
+	g.gameObjects.player.Position = saveData.Position
+	g.gameObjects.player.Velocity = saveData.Velocity
+	g.gameObjects.player.IsGrounded = saveData.IsGrounded
+	g.gameObjects.player.jumpsUsed = saveData.JumpsUsed
 
 	g.state.menuState = "inGame"
 

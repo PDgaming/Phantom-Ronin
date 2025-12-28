@@ -27,14 +27,21 @@ type Player struct {
 	IsGrounded bool
 	jumpsUsed  int
 	State      int
+}
 
-	TextureProvided bool
-	topTexture      rl.Texture2D
-	leftTexture     rl.Texture2D
-	rightTexture    rl.Texture2D
-	frontTexture    rl.Texture2D
-	backTexture     rl.Texture2D
-	bottomTexture   rl.Texture2D
+func (g *Game) initializePlayer() {
+	g.gameObjects.player = Player{
+		Position: rl.NewVector3(25.0, -1, 0.0),
+		Width:    0.5,
+		Height:   2.0,
+		Length:   1,
+		Color:    rl.Green,
+
+		SPEED: 8.0,
+
+		Model:    g.gameObjects.playerModel,                                  // Pass the loaded model
+		UseModel: g.state.UseJiraiyaModel && g.gameObjects.playerModelLoaded, // Pass the flag, also considering if model loaded
+	}
 }
 
 func (p *Player) draw() {
@@ -72,10 +79,8 @@ func (p *Player) draw() {
 
 		rl.DrawModelEx(p.Model, modelPosition, modelRotationAxis, modelRotationAngle, modelScale, rl.White)
 
-	} else if !p.TextureProvided {
-		rl.DrawCube(p.Position, p.Width, p.Height, p.Length, p.Color)
 	} else {
-		DrawCubeTextureRec_Player(p.topTexture, p.leftTexture, p.rightTexture, p.frontTexture, p.backTexture, p.bottomTexture, rl.Rectangle{X: 0, Y: 0, Width: float32(p.topTexture.Width), Height: float32(p.topTexture.Height)}, p.Position, p.Width, p.Height, p.Length, p.Color)
+		rl.DrawCube(p.Position, p.Width, p.Height, p.Length, p.Color)
 	}
 }
 

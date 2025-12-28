@@ -1,15 +1,15 @@
 {
-  "Level": 7,
+  "Level": 9,
   "Position": {
     "X": 0.75,
-    "Y": -2.4,
+    "Y": -1.8413267,
     "Z": 0
   },
   "Velocity": {
     "X": 0,
-    "Y": 0,
+    "Y": -6.13789,
     "Z": 0
   },
-  "IsGrounded": true,
-  "JumpsUsed": 0
+  "IsGrounded": false,
+  "JumpsUsed": 2
 }
