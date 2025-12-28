@@ -11,7 +11,6 @@ import (
 
 func generateLevel(levelNumber int, numPlatforms int) {
 	filepath := fmt.Sprintf("level-maps/level%d.csv", levelNumber)
-
 	file, err := os.Create(filepath)
 	if err != nil {
 		panic(err)
@@ -21,95 +20,88 @@ func generateLevel(levelNumber int, numPlatforms int) {
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
-	header := []string{"posX", "posY", "posZ", "width", "height", "length", "final"}
-	writer.Write(header)
+	writer.Write([]string{"posX", "posY", "posZ", "width", "height", "length", "final"})
 
-	posX := 3.0
-	initialPosY := -2.0
-	maxPosY := 10.0
+	// --- WORLD BOUNDARIES ---
+	minX := 1.0  // Start slightly in from 0
+	maxX := 27.0 // End slightly before 28 to ensure the goal is visible
 
-	xIncrement := (28.0 - posX) / float64(numPlatforms)
+	minZBound := 1.0
+	maxZBound := 3.0
 
-	previousPosZ := 0.0
+	// --- PLAYER LIMITS ---
+	maxVerticalJump := 1.0
+	minVerticalStep := 0.3
+	maxZStep := 0.7 // Safe Z-distance for 0.8 player reach
+
+	// --- PLATFORM DIMENSIONS ---
+	pWidth := 1.0
+	pLength := 0.6
+	pHeight := 0.3
+
+	// --- MATH FOR X-SPACING ---
+	// Total space taken by platforms = numPlatforms * pWidth
+	// Remaining space for gaps = (maxX - minX) - (Total Platform Width)
+	totalAvailableSpace := (maxX - minX) - (float64(numPlatforms) * pWidth)
+
+	// If numPlatforms is 20, there are 19 gaps between them.
+	gapSize := totalAvailableSpace / float64(numPlatforms-1)
+
+	// --- INITIAL STATE ---
+	currentX := minX
+	posY := -2.0
+	currentZ := 2.0 // Start center
 
 	for i := 0; i < numPlatforms; i++ {
 		isFinal := (i == numPlatforms-1)
 
-		width := 0.8 + rand.Float64()*(1.0-0.8)
-		length := 0.4 + rand.Float64()*(0.8-0.4)
-		height := 0.3
+		// 1. Z-Axis Walk (Step-constrained)
+		if i > 0 {
+			zShift := (rand.Float64()*2 - 1) * maxZStep
+			currentZ += zShift
 
-		minZ := -0.9 + length/2
-		maxZ := 1.1 - length/2
-
-		var posZ float64
-		if i == 0 {
-			posZ = -0.3 + rand.Float64()*(-0.3 - -0.3)
-		} else {
-			var deltaZ float64
-			if rand.Float64() < 0.2 { // 20% chance of a trick
-				sign := float64(rand.Intn(2)*2 - 1) // -1 or 1
-				deltaZ = sign * (0.4 + rand.Float64()*(0.6-0.4))
-			} else {
-				deltaZ = -0.1 + rand.Float64()*(0.1 - -0.1)
-			}
-			posZ = previousPosZ + deltaZ
-
-			if posZ < minZ {
-				posZ = minZ
-			} else if posZ > maxZ {
-				posZ = maxZ
+			// Clamp Z
+			if currentZ < minZBound {
+				currentZ = minZBound + 0.1
+			} else if currentZ > maxZBound {
+				currentZ = maxZBound - 0.1
 			}
 		}
-		previousPosZ = posZ
 
-		var posY float64
-		if i == 0 { // First platform
-			posY = -3.0 + rand.Float64()*(-2.0 - -3.0) // Ensure the first platform is low
-		} else {
-			var basePosY float64
-			if numPlatforms > 1 {
-				basePosY = initialPosY + ((maxPosY-initialPosY)/float64(numPlatforms-1))*float64(i)
-			} else {
-				basePosY = initialPosY
-			}
-			posY = basePosY + (-1.0 + rand.Float64()*(2.0))
-
-			if posY > 10 {
-				posY = 10
-			} else if posY < -2 {
-				posY = -2
-			}
+		// 2. Y-Axis Walk (Step-constrained)
+		if i > 0 {
+			posY += minVerticalStep + rand.Float64()*(maxVerticalJump-minVerticalStep)
 		}
+
+		// 3. X-Axis Placement (calculated to fit the 1.0-27.0 range)
+		// We use currentX for the platform center or edge depending on your engine.
+		// Here, currentX represents the start of the platform.
 
 		record := []string{
-			strconv.FormatFloat(posX, 'f', 6, 64),
-			strconv.FormatFloat(posY, 'f', 6, 64),
-			strconv.FormatFloat(posZ, 'f', 6, 64),
-			strconv.FormatFloat(width, 'f', 6, 64),
-			strconv.FormatFloat(height, 'f', -1, 64),
-			strconv.FormatFloat(length, 'f', 6, 64),
+			strconv.FormatFloat(currentX, 'f', 2, 64),
+			strconv.FormatFloat(posY, 'f', 2, 64),
+			strconv.FormatFloat(currentZ, 'f', 2, 64),
+			strconv.FormatFloat(pWidth, 'f', 2, 64),
+			strconv.FormatFloat(pHeight, 'f', 2, 64),
+			strconv.FormatFloat(pLength, 'f', 2, 64),
 			strconv.FormatBool(isFinal),
 		}
-		err := writer.Write(record)
-		if err != nil {
-			panic(err)
-		}
+		writer.Write(record)
 
-		posX += xIncrement + (-0.2 + rand.Float64()*(0.4))
+		// Advance X for the next platform
+		currentX += pWidth + gapSize
 	}
 }
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
-
 	if _, err := os.Stat("level-maps"); os.IsNotExist(err) {
 		os.Mkdir("level-maps", os.ModePerm)
 	}
 
 	for i := 1; i <= 10; i++ {
-		numPlatforms := rand.Intn(11) + 20 // 20 to 30
-		generateLevel(i, numPlatforms)
-		fmt.Printf("Generated level-maps/level%d.csv\n", i)
+		// Choosing 15-22 platforms keeps the gaps reasonable for a 28-unit world
+		generateLevel(i, rand.Intn(8)+15)
+		fmt.Printf("Generated level %d\n", i)
 	}
 }
