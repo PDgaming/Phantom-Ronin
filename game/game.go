@@ -15,7 +15,7 @@ func (g *Game) initialize() {
 	g.state = GameState{
 		Level:      1,
 		isSideView: true,
-		isDebug:    true,
+		isDebug:    false,
 		menuState:  "startMenu",
 		ShowIntro:  true,
 	}
