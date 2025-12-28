@@ -22,6 +22,7 @@ type SettingsData struct {
 	ShowIntro        bool
 	UseJiraiyaModel  bool
 	UsePlatformModel bool
+	IsDebug          bool
 }
 
 func ensureSaveDirectory() error {
@@ -93,13 +94,13 @@ func LoadSettings() (SettingsData, error) {
 	data, err := os.ReadFile(filepath.Join(saveDir, "settings.json"))
 	if err != nil {
 		// Default values if file not found
-		return SettingsData{ShowIntro: true, UseJiraiyaModel: false}, err
+		return SettingsData{ShowIntro: true, UseJiraiyaModel: false, IsDebug: true}, err
 	}
 
 	var settings SettingsData
 	if err := json.Unmarshal(data, &settings); err != nil {
 		// Default values if unmarshal fails
-		return SettingsData{ShowIntro: true, UseJiraiyaModel: false}, err
+		return SettingsData{ShowIntro: true, UseJiraiyaModel: false, IsDebug: true}, err
 	}
 	return settings, nil
 }

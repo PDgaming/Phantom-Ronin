@@ -1,5 +1,6 @@
 {
   "ShowIntro": true,
   "UseJiraiyaModel": true,
-  "UsePlatformModel": true
+  "UsePlatformModel": true,
+  "IsDebug": false
 }

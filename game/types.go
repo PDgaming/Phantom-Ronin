@@ -25,25 +25,26 @@ type Game struct {
 }
 
 type GameState struct {
-	Level           int
-	isSideView      bool
-	isDebug         bool
-	menuState       string
-	ShowIntro       bool
-	UseJiraiyaModel bool
+	Level            int
+	isSideView       bool
+	isDebug          bool
+	menuState        string
+	ShowIntro        bool
+	UseJiraiyaModel  bool
 	UsePlatformModel bool
 }
 
 type gameObjects struct {
-	background        Background
-	ground            Ground
-	leftWall          Wall
-	rightWall         Wall
-	player            Player
-	playerModel       rl.Model
-	playerModelLoaded bool
+	background          Background
+	ground              Ground
+	leftWall            Wall
+	rightWall           Wall
+	player              Player
+	playerModel         rl.Model
+	playerModelLoaded   bool
 	platformModel       rl.Model
 	platformModelLoaded bool
+	winPlatformModel    rl.Model
 }
 
 type audioStreams struct {
