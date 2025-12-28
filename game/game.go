@@ -124,7 +124,7 @@ func (g *Game) resetGame(level int) {
 }
 
 func (g *Game) Run() {
-	rl.SetTargetFPS(200)
+	rl.SetTargetFPS(100)
 	for !rl.WindowShouldClose() {
 
 		if rl.IsKeyPressed(rl.KeyEscape) {
