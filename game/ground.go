@@ -16,10 +16,10 @@ type Ground struct {
 func (g *Game) initializeGround() {
 	g.textures.groundTexture = rl.LoadTexture("./assets/images/grass.jpg")
 	g.gameObjects.ground = Ground{
-		Position: rl.NewVector3(0.0, -3.5, 0.1),
+		Position: rl.NewVector3(0.0, -3.5, 1.1),
 		Height:   0.2,
 		Width:    worldWidth,
-		Length:   2.0,
+		Length:   worldLength,
 		Color:    rl.Red,
 
 		TextureProvided: true,

@@ -18,7 +18,7 @@ type Wall struct {
 func (g *Game) initializeWalls() {
 	g.textures.wallTexture = rl.LoadTexture("./assets/images/wall.jpg")
 	g.gameObjects.leftWall = Wall{
-		Position:        rl.NewVector3(g.gameObjects.ground.Position.X, g.gameObjects.ground.Position.Y+2.5+g.gameObjects.ground.Height/2, 0.1),
+		Position:        rl.NewVector3(g.gameObjects.ground.Position.X, g.gameObjects.ground.Position.Y+2.5+g.gameObjects.ground.Height/2, 1.1),
 		Width:           1,
 		Height:          5,
 		Length:          g.gameObjects.ground.Length,

@@ -104,3 +104,10 @@ func LoadSettings() (SettingsData, error) {
 	}
 	return settings, nil
 }
+
+func CheckSaveFileExists() bool {
+	if _, err := os.Stat(filepath.Join(saveDir, "savegame.json")); err == nil {
+		return true
+	}
+	return false
+}

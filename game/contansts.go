@@ -6,7 +6,7 @@ const (
 
 	worldHeight = float32(15)
 	worldWidth  = float32(30)
-	worldLength = float32(2)
+	worldLength = float32(4)
 
 	GRAVITY = -9.8
 )

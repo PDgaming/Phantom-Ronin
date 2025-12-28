@@ -37,7 +37,7 @@ func (g *Game) initializePlayer() {
 		Position: rl.NewVector3(25.0, -1, 0.0),
 		Width:    0.5,
 		Height:   2.0,
-		Length:   1,
+		Length:   0.9,
 		Color:    rl.Green,
 
 		SPEED: 8.0,

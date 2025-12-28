@@ -27,26 +27,16 @@ func drawPausedMenu(g *Game) {
 		}
 	}
 
-	loadButton := gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 300, 100, 40), "Load Game")
-	if loadButton {
-		rl.PlaySound(g.audioStreams.buttonSound)
-		err := g.loadGame()
-		if err != nil {
-			fmt.Println("Could not load save game:", err)
-			g.state.menuState = "intro"
-		}
-	}
-
-	resetLevelButton := gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 350, 100, 40), "Reset Level")
+	resetLevelButton := gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 300, 100, 40), "Reset Level")
 	if resetLevelButton {
 		rl.PlaySound(g.audioStreams.buttonSound)
 		g.resetGame(g.state.Level)
 		g.state.menuState = "inGame" // Optionally return to inGame state after reset
 	}
 
-	mainMenuButton := gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 400, 100, 40), "Main Menu")
-	if mainMenuButton {
+	exitButton := gui.Button(rl.NewRectangle(float32(screenWidth)/2-50, 350, 100, 40), "Exit")
+	if exitButton {
 		rl.PlaySound(g.audioStreams.buttonSound)
-		g.state.menuState = "startMenu"
+		rl.CloseWindow()
 	}
 }
