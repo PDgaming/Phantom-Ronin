@@ -19,8 +19,9 @@ type SaveData struct {
 }
 
 type SettingsData struct {
-	ShowIntro       bool
-	UseJiraiyaModel bool
+	ShowIntro        bool
+	UseJiraiyaModel  bool
+	UsePlatformModel bool
 }
 
 func ensureSaveDirectory() error {

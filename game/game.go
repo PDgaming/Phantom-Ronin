@@ -15,7 +15,7 @@ func (g *Game) initialize() {
 	g.state = GameState{
 		Level:      1,
 		isSideView: true,
-		isDebug:    false,
+		isDebug:    true,
 		menuState:  "startMenu",
 		ShowIntro:  true,
 	}
@@ -28,14 +28,21 @@ func NewGame() *Game {
 
 	initializeAutoSave(g)
 
-	// Initialize UseJiraiyaModel
-	g.state.UseJiraiyaModel = false // Default to false
+	g.state.UseJiraiyaModel = false  // Default to false
+	g.state.UsePlatformModel = false // Default to false
 
 	// Load Jiraiya GLTF model
 	g.gameObjects.playerModel = rl.LoadModel("assets/models/jiraiya/scene.gltf")
 	g.gameObjects.playerModelLoaded = (g.gameObjects.playerModel.MeshCount > 0) // Check if model loaded successfully using MeshCount
 	if !g.gameObjects.playerModelLoaded {
 		fmt.Println("WARNING: Jiraiya GLTF model not loaded. Falling back to cube.")
+	}
+
+	// Load Platform GLTF model
+	g.gameObjects.platformModel = rl.LoadModel("assets/models/platform/scene.gltf")
+	g.gameObjects.platformModelLoaded = (g.gameObjects.platformModel.MeshCount > 0)
+	if !g.gameObjects.platformModelLoaded {
+		fmt.Println("WARNING: Platform GLTF model not loaded. Falling back to cube.")
 	}
 
 	// Load settings
@@ -45,6 +52,7 @@ func NewGame() *Game {
 	} else {
 		g.state.ShowIntro = settings.ShowIntro
 		g.state.UseJiraiyaModel = settings.UseJiraiyaModel
+		g.state.UsePlatformModel = settings.UsePlatformModel
 	}
 
 	g.introDialogueManager = dialogue.NewManager([]string{
@@ -81,25 +89,25 @@ func (g *Game) resetGame(level int) {
 
 	switch g.state.Level {
 	case 1:
-		g.currentLevel.loadLevel("./level-maps/level1.csv")
+		g.currentLevel.loadLevel("./level-maps/level1.csv", g.gameObjects.platformModel, g.state.UsePlatformModel)
 	case 2:
-		g.currentLevel.loadLevel("./level-maps/level2.csv")
+		g.currentLevel.loadLevel("./level-maps/level2.csv", g.gameObjects.platformModel, g.state.UsePlatformModel)
 	case 3:
-		g.currentLevel.loadLevel("./level-maps/level3.csv")
+		g.currentLevel.loadLevel("./level-maps/level3.csv", g.gameObjects.platformModel, g.state.UsePlatformModel)
 	case 4:
-		g.currentLevel.loadLevel("./level-maps/level4.csv")
+		g.currentLevel.loadLevel("./level-maps/level4.csv", g.gameObjects.platformModel, g.state.UsePlatformModel)
 	case 5:
-		g.currentLevel.loadLevel("./level-maps/level5.csv")
+		g.currentLevel.loadLevel("./level-maps/level5.csv", g.gameObjects.platformModel, g.state.UsePlatformModel)
 	case 6:
-		g.currentLevel.loadLevel("./level-maps/level6.csv")
+		g.currentLevel.loadLevel("./level-maps/level6.csv", g.gameObjects.platformModel, g.state.UsePlatformModel)
 	case 7:
-		g.currentLevel.loadLevel("./level-maps/level7.csv")
+		g.currentLevel.loadLevel("./level-maps/level7.csv", g.gameObjects.platformModel, g.state.UsePlatformModel)
 	case 8:
-		g.currentLevel.loadLevel("./level-maps/level8.csv")
+		g.currentLevel.loadLevel("./level-maps/level8.csv", g.gameObjects.platformModel, g.state.UsePlatformModel)
 	case 9:
-		g.currentLevel.loadLevel("./level-maps/level9.csv")
+		g.currentLevel.loadLevel("./level-maps/level9.csv", g.gameObjects.platformModel, g.state.UsePlatformModel)
 	case 10:
-		g.currentLevel.loadLevel("./level-maps/level10.csv")
+		g.currentLevel.loadLevel("./level-maps/level10.csv", g.gameObjects.platformModel, g.state.UsePlatformModel)
 	default:
 		if g.state.menuState != "gameOver" {
 			fmt.Println("Game Completed!")
@@ -201,6 +209,7 @@ func (g *Game) unload() {
 	rl.UnloadTexture(g.textures.groundTexture)
 	rl.UnloadTexture(g.textures.wallTexture)
 	rl.UnloadModel(g.gameObjects.playerModel)
+	rl.UnloadModel(g.gameObjects.platformModel)
 	unloadAudio(g)
 	rl.CloseWindow()
 }

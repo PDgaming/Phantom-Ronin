@@ -31,6 +31,7 @@ type GameState struct {
 	menuState       string
 	ShowIntro       bool
 	UseJiraiyaModel bool
+	UsePlatformModel bool
 }
 
 type gameObjects struct {
@@ -41,6 +42,8 @@ type gameObjects struct {
 	player            Player
 	playerModel       rl.Model
 	playerModelLoaded bool
+	platformModel       rl.Model
+	platformModelLoaded bool
 }
 
 type audioStreams struct {

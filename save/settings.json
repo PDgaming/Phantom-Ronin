@@ -1,4 +1,5 @@
 {
   "ShowIntro": true,
-  "UseJiraiyaModel": true
+  "UseJiraiyaModel": true,
+  "UsePlatformModel": true
 }

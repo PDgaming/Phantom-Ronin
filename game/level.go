@@ -12,7 +12,7 @@ type Level struct {
 	Platforms []Platform
 }
 
-func (l *Level) loadLevel(filePath string) {
+func (l *Level) loadLevel(filePath string, platformModel rl.Model, usePlatformModel bool) {
 	f, err := os.Open(filePath)
 	if err != nil {
 		rl.TraceLog(rl.LogError, "Failed to open level file.")
@@ -76,6 +76,9 @@ func (l *Level) loadLevel(filePath string) {
 			SideTexture:     platformSideTexture,
 
 			final: final,
+
+			Model:    platformModel,
+			UseModel: usePlatformModel && (platformModel.MeshCount > 0),
 		}
 
 		l.Platforms = append(l.Platforms, newPlatform)
