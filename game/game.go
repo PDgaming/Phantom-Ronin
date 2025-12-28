@@ -32,7 +32,7 @@ func NewGame() *Game {
 	g.state.UseJiraiyaModel = false // Default to false
 
 	// Load Jiraiya GLTF model
-	g.gameObjects.playerModel = rl.LoadModel("assets/jiraiya/scene.gltf")
+	g.gameObjects.playerModel = rl.LoadModel("assets/models/jiraiya/scene.gltf")
 	g.gameObjects.playerModelLoaded = (g.gameObjects.playerModel.MeshCount > 0) // Check if model loaded successfully using MeshCount
 	if !g.gameObjects.playerModelLoaded {
 		fmt.Println("WARNING: Jiraiya GLTF model not loaded. Falling back to cube.")
