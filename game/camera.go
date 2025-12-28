@@ -28,7 +28,7 @@ func (g *Game) updateCamera() {
 		g.camera.Projection = rl.CameraPerspective
 		g.camera.Fovy = 45.0
 
-		g.camera.Position = rl.NewVector3(g.gameObjects.player.Position.X+6, g.gameObjects.player.Position.Y+2, 5)
+		g.camera.Position = rl.NewVector3(g.gameObjects.player.Position.X+6, g.gameObjects.player.Position.Y+3, 6)
 		g.camera.Target = rl.NewVector3(g.gameObjects.player.Position.X, g.gameObjects.player.Position.Y, 0)
 
 		g.gameObjects.player.SPEED = 4.0

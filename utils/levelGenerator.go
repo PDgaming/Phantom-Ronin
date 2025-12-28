@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/csv"
 	"fmt"
+	"math"
 	"math/rand"
 	"os"
 	"strconv"
@@ -11,85 +12,71 @@ import (
 
 func generateLevel(levelNumber int, numPlatforms int) {
 	filepath := fmt.Sprintf("level-maps/level%d.csv", levelNumber)
-	file, err := os.Create(filepath)
-	if err != nil {
-		panic(err)
-	}
+	file, _ := os.Create(filepath)
 	defer file.Close()
-
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
 	writer.Write([]string{"posX", "posY", "posZ", "width", "height", "length", "final"})
 
-	// --- WORLD BOUNDARIES ---
-	minX := 1.0  // Start slightly in from 0
-	maxX := 27.0 // End slightly before 28 to ensure the goal is visible
+	// --- CONFIG ---
+	minX, maxX := 1.0, 27.0
+	minZ, maxZ := 0.0, 2.0
+	maxZStep := 0.7
 
-	minZBound := 1.0
-	maxZBound := 3.0
-
-	// --- PLAYER LIMITS ---
-	maxVerticalJump := 1.0
-	minVerticalStep := 0.3
-	maxZStep := 0.7 // Safe Z-distance for 0.8 player reach
-
-	// --- PLATFORM DIMENSIONS ---
+	totalDist := maxX - minX
 	pWidth := 1.0
-	pLength := 0.6
-	pHeight := 0.3
 
-	// --- MATH FOR X-SPACING ---
-	// Total space taken by platforms = numPlatforms * pWidth
-	// Remaining space for gaps = (maxX - minX) - (Total Platform Width)
-	totalAvailableSpace := (maxX - minX) - (float64(numPlatforms) * pWidth)
+	// --- Y-AXIS S-CURVE CONFIG ---
+	// We'll use: Y = Sine(progress) * Amplitude + UpwardTrend
+	amplitude := 2.5 + rand.Float64()*2.0     // How high the "S" peaks
+	verticalTrend := 6.0 + rand.Float64()*4.0 // Total height gain
 
-	// If numPlatforms is 20, there are 19 gaps between them.
-	gapSize := totalAvailableSpace / float64(numPlatforms-1)
-
-	// --- INITIAL STATE ---
-	currentX := minX
-	posY := -2.0
-	currentZ := 2.0 // Start center
+	currentZ := 1.5 + rand.Float64() // Start somewhere random in Z
 
 	for i := 0; i < numPlatforms; i++ {
 		isFinal := (i == numPlatforms-1)
+		progress := float64(i) / float64(numPlatforms-1) // 0.0 to 1.0
 
-		// 1. Z-Axis Walk (Step-constrained)
+		// 1. X-AXIS WITH JITTER
+		// Base linear position
+		baseX := minX + (progress * totalDist)
+		// Add jitter so platforms aren't perfectly spaced (except first and last)
+		jitterX := 0.0
+		if i > 0 && !isFinal {
+			jitterX = (rand.Float64() - 0.5) * 0.8
+		}
+		actualX := baseX + jitterX
+
+		// 2. Y-AXIS "S" PATTERN
+		// Sine wave + linear climb
+		sCurve := math.Sin(progress*math.Pi*1.5) * amplitude
+		climb := progress * verticalTrend
+		actualY := -2.0 + sCurve + climb + (rand.Float64() * 0.5) // add bit of noise
+
+		// 3. Z-AXIS WALK
 		if i > 0 {
 			zShift := (rand.Float64()*2 - 1) * maxZStep
 			currentZ += zShift
-
-			// Clamp Z
-			if currentZ < minZBound {
-				currentZ = minZBound + 0.1
-			} else if currentZ > maxZBound {
-				currentZ = maxZBound - 0.1
+			// Clamp with a small bounce
+			if currentZ < minZ {
+				currentZ = minZ + 0.1
+			}
+			if currentZ > maxZ {
+				currentZ = maxZ - 0.1
 			}
 		}
 
-		// 2. Y-Axis Walk (Step-constrained)
-		if i > 0 {
-			posY += minVerticalStep + rand.Float64()*(maxVerticalJump-minVerticalStep)
-		}
-
-		// 3. X-Axis Placement (calculated to fit the 1.0-27.0 range)
-		// We use currentX for the platform center or edge depending on your engine.
-		// Here, currentX represents the start of the platform.
-
 		record := []string{
-			strconv.FormatFloat(currentX, 'f', 2, 64),
-			strconv.FormatFloat(posY, 'f', 2, 64),
+			strconv.FormatFloat(actualX, 'f', 2, 64),
+			strconv.FormatFloat(actualY, 'f', 2, 64),
 			strconv.FormatFloat(currentZ, 'f', 2, 64),
 			strconv.FormatFloat(pWidth, 'f', 2, 64),
-			strconv.FormatFloat(pHeight, 'f', 2, 64),
-			strconv.FormatFloat(pLength, 'f', 2, 64),
+			strconv.FormatFloat(0.3, 'f', 2, 64),
+			strconv.FormatFloat(0.6, 'f', 2, 64),
 			strconv.FormatBool(isFinal),
 		}
 		writer.Write(record)
-
-		// Advance X for the next platform
-		currentX += pWidth + gapSize
 	}
 }
 
@@ -100,8 +87,7 @@ func main() {
 	}
 
 	for i := 1; i <= 10; i++ {
-		// Choosing 15-22 platforms keeps the gaps reasonable for a 28-unit world
-		generateLevel(i, rand.Intn(8)+15)
+		generateLevel(i, rand.Intn(6)+16) // 16 to 22 platforms
 		fmt.Printf("Generated level %d\n", i)
 	}
 }
